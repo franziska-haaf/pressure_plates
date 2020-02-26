@@ -1,23 +1,11 @@
-/*
-  WiFi UDP Send and Receive String
-
-  This sketch wait an UDP packet on localPort using a WiFi shield.
-  When a packet is received an Acknowledge packet is sent to the client on port remotePort
-
-  Circuit:
-   WiFi shield attached
-
-  created 30 December 2012
-  by dlf (Metodo2 srl)
-*/
 #include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 int status = WL_IDLE_STATUS;
 
-char ssid[] = "ESPap"; //  your network SSID (name)
-char pass[] = "thereisnospoon";    // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "Vogsphere"; //  your network SSID (name)
+char pass[] = "soschnellwirdmanzumvogonen";    // your network password (use for WPA, or use as key for WEP)
 
 //int keyIndex = 0;            // your network key Index number (needed only for WEP)
 unsigned int localPort = 8080;      // local port to listen on

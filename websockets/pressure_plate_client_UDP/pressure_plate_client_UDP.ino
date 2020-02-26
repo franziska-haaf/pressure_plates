@@ -16,8 +16,8 @@
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 int status = WL_IDLE_STATUS;
-char ssid[] = "ESPap"; //  your network SSID (name)
-char pass[] = "thereisnospoon";    // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "Vogsphere"; //  your network SSID (name)
+char pass[] = "soschnellwirdmanzumvogonen";    // your network password (use for WPA, or use as key for WEP)
 //int keyIndex = 0;            // your network key Index number (needed only for WEP)
 unsigned int localPort = 8080;      // local port to listen on
 char packetBuffer[255]; //buffer to hold incoming packet

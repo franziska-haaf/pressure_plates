@@ -74,7 +74,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 }
 
 void setup() {
-    USE_SERIAL.begin(115200);
+    USE_SERIAL.begin(74880);
     strip.begin();
     strip.show();
     strip.setBrightness(150); // Set BRIGHTNESS (max = 255)
@@ -108,6 +108,7 @@ void setup() {
 
 void loop() {
     webSocket.loop();
+    Serial.println(WiFi.localIP());
 
     // read the state of the pushbutton value:
     buttonState = digitalRead(BUTTON_PIN);
