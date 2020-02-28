@@ -59,7 +59,7 @@ void setup() {
 
   Serial.printf("Connecting to %s ", ssid);
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED){
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
@@ -86,26 +86,21 @@ void loop() {
     time_t now;
     struct tm * timeinfo;
     time(&now);
-    timeinfo = localtime(&now);  
-    char timestamp [7]; 
+    timeinfo = localtime(&now);
+    char timestamp [7]; //problem: the hour/min/sec can be 1-9 aswell, making the timestamp [] shorter!
     sprintf(timestamp, "%ld%ld%ld\0", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     Serial.println("Timestamp:");
     Serial.println(timestamp);
+    Serial.println("Old Timestamp:");
+    Serial.println(lastSteppedTimestamp);
 
-    //Calc the difference
-    int timestampInt, timestampIntOld;
-    sscanf(timestamp, "%d", &timestampInt);
-    sscanf(lastSteppedTimestamp, "%d", &timestampIntOld);
-    Serial.println("Time diff:");
-    Serial.println(timestampIntOld - timestampInt);
+    boolean nowIsLaterThenBefore = calculateTimeDifference(timestamp,lastSteppedTimestamp);
 
     //Copy new timestamp into old one
     char * ptrtimestamp = timestamp;
     char * ptrtimestampOld = lastSteppedTimestamp;
-    while(*ptrtimestampOld++ = *ptrtimestamp++);
-    Serial.println("Old Timestamp:");
-    Serial.println(lastSteppedTimestamp);
-
+    while (*ptrtimestampOld++ = *ptrtimestamp++);
+   
     //------ Tell other plate
     sendPackage(now);
     //todo rest of code
@@ -119,7 +114,7 @@ void loop() {
     // receive incoming UDP packets
     Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
     int len = Udp.read(incomingPacket, 255);
-    if (len > 0){
+    if (len > 0) {
       incomingPacket[len] = 0;
     }
     Serial.printf("UDP packet contents: %s\n", incomingPacket);
@@ -131,13 +126,27 @@ void loop() {
   }
 }
 
+/**
+   Calculate the difference of two char timestamps.
+
+   true     firstTimeStamp is bigger then secondTimeStamp
+   false    secondTimeStamp is bigger then firstTimeStamp
+*/
+boolean calculateTimeDifference(char firstTimeStamp [], char secondTimeStamp []) {
+  int firstTimestampInt, secondTimestampInt;
+  sscanf(firstTimeStamp, "%d", &firstTimestampInt);
+  sscanf(secondTimeStamp, "%d", &secondTimestampInt);
+  Serial.println("firstTimeStamp > secondTimeStamp:");
+  Serial.println(firstTimestampInt > secondTimestampInt);
+  return firstTimestampInt > secondTimestampInt;
+}
 
 void checkMessage(char package) {
   //if (package.startsWith(STEPPED)) {
-    //get the timeout out of the message
-    //myString.substring(from, to)
-    
- // }
+  //get the timeout out of the message
+  //myString.substring(from, to)
+
+  // }
 }
 
 /**
