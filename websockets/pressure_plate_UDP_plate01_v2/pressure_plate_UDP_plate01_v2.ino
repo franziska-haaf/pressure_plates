@@ -26,14 +26,15 @@ int buttonState = 0;         // variable for reading the pushbutton status
 
 uint32_t black = strip.Color(0, 0, 0);
 
-uint32_t pink = strip.Color(255, 0, 234);
-uint32_t orange = strip.Color(255, 162, 0);
-uint32_t turquoise = strip.Color(0, 255, 145);
-uint32_t red = strip.Color(255, 0, 0);
-uint32_t green = strip.Color(0, 255, 0);
-uint32_t blue = strip.Color(0, 0, 255);
-uint32_t yellow = strip.Color(255, 255, 0);
+uint32_t pink = strip.Color(255, 0, 234);           // 0
+uint32_t orange = strip.Color(255, 162, 0);         // 1
+uint32_t turquoise = strip.Color(0, 255, 145);      // 2
+uint32_t red = strip.Color(255, 0, 0);              // 3
+uint32_t green = strip.Color(0, 255, 0);            // 4
+uint32_t blue = strip.Color(0, 0, 255);             // 5
+uint32_t yellow = strip.Color(255, 255, 0);         // 7
 uint32_t colors [7] = {pink, orange, turquoise, red, green, blue, yellow};
+int currentColor = 0; //can be: 0 - 6
 
 const char* ssid = "OnePlus 5T";
 const char* password = "TeddyIstBraun";
@@ -44,7 +45,6 @@ char incomingPacket[255];  // buffer for incoming packets
 char replyPacket[] = "Hi there! Got the message :-)";  // a reply string to send back
 
 uint32_t lastSteppedColor;
-char lastSteppedTimestamp [7];
 
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
@@ -75,40 +75,21 @@ void setup() {
 void loop() {
   rotateColors();
 
-
   // read the state of the pushbutton value:
   buttonState = digitalRead(BUTTON_PIN);
   //-----------------------------GOT STEPPED ON: SEND PACKAGE
   if (buttonState == LOW) {
     Serial.println("Got stepped on");
     //------Save Timestamp
-    //Get the current timestamp
-    time_t now;
-    struct tm * timeinfo;
-    time(&now);
-    timeinfo = localtime(&now);
-    char timestamp [7]; //problem: the hour/min/sec can be 1-9 aswell, making the timestamp [] shorter!
-    sprintf(timestamp, "%ld%ld%ld\0", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    Serial.println("Timestamp:");
-    Serial.println(timestamp);
-    Serial.println("Old Timestamp:");
-    Serial.println(lastSteppedTimestamp);
+    time_t timestamp = time(nullptr);
+    Serial.println(ctime(&timestamp));
 
-    boolean nowIsLaterThenBefore = calculateTimeDifference(timestamp,lastSteppedTimestamp);
-
-    //Copy new timestamp into old one
-    char * ptrtimestamp = timestamp;
-    char * ptrtimestampOld = lastSteppedTimestamp;
-    while (*ptrtimestampOld++ = *ptrtimestamp++);
-   
     //------ Tell other plate
-    sendPackage(now);
-    //todo rest of code
+    sendTimestampToOtherPlate(timestamp); //give timestamp + color! check if the got the same color!!!
   }
+  delay(1000); 
 
-  delay(1000);
-
-  //-----------------------------OTHER ONE GOT STEPPED ON: RECEIVE PACKAGES
+  //-----------------------------RECEIVE PACKAGES
   int packetSize = Udp.parsePacket();
   if (packetSize) {
     // receive incoming UDP packets
@@ -119,42 +100,18 @@ void loop() {
     }
     Serial.printf("UDP packet contents: %s\n", incomingPacket);
 
-    // send back a reply, to the IP address and port we got the packet from
-    Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-    Udp.write(replyPacket);
-    Udp.endPacket();
+    //A: we got a boolean telling us if we won or not
+    //B: we got a color + timestamp 
   }
 }
 
-/**
-   Calculate the difference of two char timestamps.
-
-   true     firstTimeStamp is bigger then secondTimeStamp
-   false    secondTimeStamp is bigger then firstTimeStamp
-*/
-boolean calculateTimeDifference(char firstTimeStamp [], char secondTimeStamp []) {
-  int firstTimestampInt, secondTimestampInt;
-  sscanf(firstTimeStamp, "%d", &firstTimestampInt);
-  sscanf(secondTimeStamp, "%d", &secondTimestampInt);
-  Serial.println("firstTimeStamp > secondTimeStamp:");
-  Serial.println(firstTimestampInt > secondTimestampInt);
-  return firstTimestampInt > secondTimestampInt;
-}
-
-void checkMessage(char package) {
-  //if (package.startsWith(STEPPED)) {
-  //get the timeout out of the message
-  //myString.substring(from, to)
-
-  // }
-}
 
 /**
-   Send a the handed text to the other plate
+   Send timestamp to the other plate
 */
-void sendPackage(time_t time) {
+void sendTimestampToOtherPlate(time_t timestamp) {
   Udp.beginPacket(OTHER_PLATE_IP, localUdpPort);
-  Udp.write("Stepped");
+  Udp.write(timestamp);
   Udp.endPacket();
 }
 
@@ -175,5 +132,6 @@ void rotateColors() {
 void setToRandomColor() {
   int randNumber = random(0, 7);
   strip.fill( colors[randNumber], 0, strip.numPixels() - 1);
+  currentColor = randNumber;
   strip.show();
 }
