@@ -44,7 +44,7 @@ char incomingPacket[255];  // buffer for incoming packets
 char replyPacket[] = "Hi there! Got the message :-)";  // a reply string to send back
 
 uint32_t lastSteppedColor;
-char lastSteppedTime [6];
+char lastSteppedTimestamp [7];
 
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
@@ -82,23 +82,29 @@ void loop() {
   if (buttonState == LOW) {
     Serial.println("Got stepped on");
     //------Save Timestamp
-//    time_t now = time(nullptr);
-//    Serial.println(ctime(&now));
-
+    //Get the current timestamp
     time_t now;
     struct tm * timeinfo;
     time(&now);
     timeinfo = localtime(&now);  
-    Serial.println(timeinfo->tm_hour); //int
-    Serial.println(timeinfo->tm_min);
-    Serial.println(timeinfo->tm_sec);
-   // snprintf( NULL, 0, "%d", x );
-   char * timestamp = 
+    char timestamp [7]; 
+    sprintf(timestamp, "%ld%ld%ld\0", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    Serial.println("Timestamp:");
+    Serial.println(timestamp);
 
+    //Calc the difference
+    int timestampInt, timestampIntOld;
+    sscanf(timestamp, "%d", &timestampInt);
+    sscanf(lastSteppedTimestamp, "%d", &timestampIntOld);
     Serial.println("Time diff:");
-    //Serial.println((int) timestamp - (int)lastSteppedTime);
+    Serial.println(timestampIntOld - timestampInt);
 
-   // lastSteppedTime = timestamp;
+    //Copy new timestamp into old one
+    char * ptrtimestamp = timestamp;
+    char * ptrtimestampOld = lastSteppedTimestamp;
+    while(*ptrtimestampOld++ = *ptrtimestamp++);
+    Serial.println("Old Timestamp:");
+    Serial.println(lastSteppedTimestamp);
 
     //------ Tell other plate
     sendPackage(now);
