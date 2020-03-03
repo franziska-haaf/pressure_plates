@@ -11,14 +11,12 @@
 #include <Adafruit_NeoPixel.h>
 #include <time.h>
 
-#define OTHER_PLATE_IP    "192.168.179.24"
+#define OTHER_PLATE_IP    "192.168.178.24"
 #define SERIAL_BAUD_NUM   74880
 
 #define   BUTTON_PIN    4
 #define   LED_STRIP     2
 #define   NUMPIXELS     53
-
-#define STEPPED  "S"
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
@@ -82,12 +80,13 @@ void loop() {
     Serial.println("Got stepped on");
     //------Save Timestamp
     time_t timestamp = time(nullptr);
+    Serial.println(timestamp);
     Serial.println(ctime(&timestamp));
 
     //------ Tell other plate
     sendTimestampToOtherPlate(timestamp); //give timestamp + color! check if the got the same color!!!
   }
-  delay(1000); 
+  delay(1000);
 
   //-----------------------------RECEIVE PACKAGES
   int packetSize = Udp.parsePacket();
@@ -99,10 +98,45 @@ void loop() {
       incomingPacket[len] = 0;
     }
     Serial.printf("UDP packet contents: %s\n", incomingPacket);
+    time_t convertedTimestamp = convertStringToTime_t(incomingPacket);
+    Serial.printf(ctime(&convertedTimestamp));
 
     //A: we got a boolean telling us if we won or not
-    //B: we got a color + timestamp 
+    //B: we got a color + timestamp
   }
+}
+
+/**
+   Convert a timestamp given in format
+   Fri Feb 28 16:29:31 2020
+   to a time_t object
+*/
+time_t convertStringToTime_t(char timestamp []) {
+  time_t result = time(NULL);
+  const char *timestampString = timestamp;
+  char weekDay [3];
+  char month [3];
+  int dd, hh, mm, ss, yyyy = 0;
+  struct tm timestampFromString = {0};
+
+  //input     Fri Feb 28 16:40:11 2020
+  //output    Wed Dec 31 23:59:59 1969 TODO always same output?!
+
+  sscanf(timestampString, "%s %s %d %d:%d:%d %d", &weekDay, &month, &dd, &hh, &mm, &ss, &yyyy);
+  Serial.printf("Weekday: %s", weekDay);
+  Serial.printf("month: %s", month);
+  timestampFromString.tm_year = yyyy - 1900; //years since 1900
+  timestampFromString.tm_mon = month; //todo convert to int
+  timestampFromString.tm_wday = weekDay; //todo convert to int
+  timestampFromString.tm_mday = dd;
+  timestampFromString.tm_hour = hh;
+  timestampFromString.tm_min = mm;
+  timestampFromString.tm_sec = ss;
+  timestampFromString.tm_isdst = -1;
+
+  result = mktime(&timestampFromString);
+  // mktime   Convert tm structure to time_t
+  return result;
 }
 
 
@@ -110,8 +144,8 @@ void loop() {
    Send timestamp to the other plate
 */
 void sendTimestampToOtherPlate(time_t timestamp) {
-  Udp.beginPacket(OTHER_PLATE_IP, localUdpPort);
-  Udp.write(timestamp);
+  Udp.beginPacket("192.168.43.46", 4210);
+  Udp.write(ctime(&timestamp));
   Udp.endPacket();
 }
 
