@@ -11,7 +11,6 @@
 #include <Adafruit_NeoPixel.h>
 #include <time.h>
 
-#define OTHER_PLATE_IP    "192.168.178.24"
 #define SERIAL_BAUD_NUM   74880
 
 #define   BUTTON_PIN    4
@@ -30,19 +29,17 @@ uint32_t turquoise = strip.Color(0, 255, 145);      // 2
 uint32_t red = strip.Color(255, 0, 0);              // 3
 uint32_t green = strip.Color(0, 255, 0);            // 4
 uint32_t blue = strip.Color(0, 0, 255);             // 5
-uint32_t yellow = strip.Color(255, 255, 0);         // 7
+uint32_t yellow = strip.Color(255, 255, 0);         // 6
 uint32_t colors [7] = {pink, orange, turquoise, red, green, blue, yellow};
 int currentColor = 0; //can be: 0 - 6
-
-const char* ssid = "OnePlus 5T";
-const char* password = "TeddyIstBraun";
 
 WiFiUDP Udp;
 unsigned int localUdpPort = 4210;  // local port to listen on
 char incomingPacket[255];  // buffer for incoming packets
-char replyPacket[] = "Hi there! Got the message :-)";  // a reply string to send back
 
 uint32_t lastSteppedColor;
+
+#include "wifiAccessData.h"
 
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
@@ -81,9 +78,8 @@ void loop() {
     //------Save Timestamp
     time_t timestamp = time(nullptr);
     Serial.println(timestamp);
-
     //------ Tell other plate
-    sendTimestampToOtherPlate(timestamp); //give timestamp + color! check if the got the same color!!!
+    sendTimestampAndColorToOtherPlate(timestamp); //give timestamp + color! check if the got the same color!!!
   }
   delay(1000);
 
@@ -96,12 +92,22 @@ void loop() {
     if (len > 0) {
       incomingPacket[len] = 0;
     }
+    //------ Read content of package
     Serial.printf("got %s\n", incomingPacket);
-    char *bufferString;
-    time_t i = strtoul(incomingPacket, &bufferString, 10);
-
+    Serial.printf("length of the package %d\n", strlen (incomingPacket));
     //A: we got a boolean telling us if we won or not
+    if ((strcmp(incomingPacket, "1") == 0)) {
+      winnerLights();
+    }
+    else if ((strcmp(incomingPacket, "0") == 0)) {
+      looserLights();
+    }
     //B: we got a color + timestamp
+    else {
+      char *bufferString;
+      time_t receivedTimestamp = strtoul(incomingPacket, &bufferString, 15);
+      //todo vergleichen und zurück melden wer gewonnen hat
+    }
   }
 }
 
@@ -113,10 +119,29 @@ void sendTimestampToOtherPlate(time_t timestamp) {
   //time_t value    long int    1583315675
   char timestampBuffer [15];
   snprintf (timestampBuffer, 15, "%ld", timestamp);
-  Serial.printf("send %s\n",timestampBuffer);
-  
+  Serial.printf("send %s\n", timestampBuffer);
+
   Udp.beginPacket("192.168.43.46", 4210);
-  Udp.write(timestampBuffer); 
+  Udp.write(timestampBuffer);
+  Udp.endPacket();
+}
+
+/**
+   Send timestamp and the current color to the other plate
+*/
+void sendTimestampAndColorToOtherPlate(time_t timestamp) {
+  //time_t value    long int    1583315675
+  char timestampBuffer [15];
+  snprintf (timestampBuffer, 15, "%ld", timestamp);
+  //create char of timestamp + current color
+  char packageToSend[15];
+  sprintf(packageToSend, "%d%s", currentColor, timestampBuffer);
+
+  Serial.println("send package ");
+  Serial.println(packageToSend);
+
+  Udp.beginPacket(laptopIP, 4210);
+  Udp.write(packageToSend);
   Udp.endPacket();
 }
 
@@ -129,7 +154,6 @@ unsigned long timeNow = 0;
 void rotateColors() {
   if ((unsigned long)(millis() - timeNow) > waitTime) {
     timeNow = millis();
-    Serial.println("Change color");
     setToRandomColor();
   }
 }
@@ -138,5 +162,34 @@ void setToRandomColor() {
   int randNumber = random(0, 7);
   strip.fill( colors[randNumber], 0, strip.numPixels() - 1);
   currentColor = randNumber;
+  Serial.println("set current color ");
+  Serial.println(currentColor);
+  strip.show();
+}
+
+
+void winnerLights() {
+  for (int rounds = 5; rounds >= 0; rounds--) {
+    for (int i = 0; i <= 6; i++) {
+      strip.fill( colors[i], 0, strip.numPixels() - 1);
+      strip.show();
+      delay(50);
+    }
+  }
+  strip.fill( colors[currentColor], 0, strip.numPixels() - 1);
+  strip.show();
+}
+
+void looserLights() {
+  strip.fill(red, 0, strip.numPixels() - 1);
+  strip.show();
+  delay(10);
+  for (int i = 255; i >= 0; i--) {
+    strip.fill( strip.Color(i, 0, 0), 0, strip.numPixels() - 1);
+    strip.show();
+    delay(5);
+  }
+  delay(500);
+  strip.fill( colors[currentColor], 0, strip.numPixels() - 1);
   strip.show();
 }
