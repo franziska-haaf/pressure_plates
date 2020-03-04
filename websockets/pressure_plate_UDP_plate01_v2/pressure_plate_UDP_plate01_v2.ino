@@ -42,6 +42,8 @@ uint32_t lastSteppedColor;
 
 #include "wifiAccessData.h"
 
+const char* usedIP = laptopIP; //TODO change here
+
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
 
@@ -94,9 +96,8 @@ void loop() {
       incomingPacket[len] = 0;
     }
     //------ Read content of package
-    Serial.printf("got %s\n", incomingPacket);
-    Serial.printf("length of the package %d\n", strlen (incomingPacket));
-    //A: we got a boolean telling us if we won or not
+    Serial.printf("received %s\n", incomingPacket);
+    //A: we got a boolean char telling us if we won or not
     if ((strcmp(incomingPacket, "1") == 0)) {
       winnerLights();
     }
@@ -105,32 +106,56 @@ void loop() {
     }
     //B: we got a color + timestamp
     else {
+      //------ Split into color and timestamp
+      //[0]        color
+      //[1]-[10]   timestamp
+      char receivedColorString = incomingPacket[0];
+      int receivedColor = receivedColorString - 48;
+      Serial.printf("received color %d\n", receivedColor);
+
+      char receivedTimestampString [10];
+      for (int j = 1; j <= 10; j++) {
+        receivedTimestampString[j - 1] = incomingPacket[j];
+      }
       char *bufferString;
-      time_t receivedTimestamp = strtoul(incomingPacket, &bufferString, 15);
-      //todo vergleichen und zurück melden wer gewonnen hat
-      
+      time_t receivedTimestamp = strtoul(receivedTimestampString, &bufferString, 10);
+      Serial.printf("received timestamp %ld\n", receivedTimestamp);
+      //------ Check color
+      if (receivedColor == lastSteppedColor) {
+        //------ Check timestamp
+        //todo check timestamp
+      }
+      else {
+        sendOtherPlateItWon();
+        looserLights();
+      }
     }
   }
 }
 
+void sendOtherPlateItWon() {
+  Udp.beginPacket(usedIP, 4210);
+  Udp.write("1");
+  Udp.endPacket();
+}
 
-/**
-   Send timestamp to the other plate
-*/
+void sendOtherPlateItLost() {
+  Udp.beginPacket(usedIP, 4210);
+  Udp.write("0");
+  Udp.endPacket();
+}
+
 void sendTimestampToOtherPlate(time_t timestamp) {
   //time_t value    long int    1583315675
   char timestampBuffer [15];
   snprintf (timestampBuffer, 15, "%ld", timestamp);
   Serial.printf("send %s\n", timestampBuffer);
 
-  Udp.beginPacket("192.168.43.46", 4210);
+  Udp.beginPacket(usedIP, 4210);
   Udp.write(timestampBuffer);
   Udp.endPacket();
 }
 
-/**
-   Send timestamp and the current color to the other plate
-*/
 void sendTimestampAndColorToOtherPlate(time_t timestamp) {
   //time_t value    long int    1583315675
   char timestampBuffer [15];
@@ -142,7 +167,7 @@ void sendTimestampAndColorToOtherPlate(time_t timestamp) {
   Serial.println("send package ");
   Serial.println(packageToSend);
 
-  Udp.beginPacket(laptopIP, 4210);
+  Udp.beginPacket(usedIP, 4210);
   Udp.write(packageToSend);
   Udp.endPacket();
 }
@@ -164,8 +189,7 @@ void setToRandomColor() {
   int randNumber = random(0, 7);
   strip.fill( colors[randNumber], 0, strip.numPixels() - 1);
   currentColor = randNumber;
-  Serial.println("set current color ");
-  Serial.println(currentColor);
+  Serial.printf("set current color %d\n", currentColor);
   strip.show();
 }
 
