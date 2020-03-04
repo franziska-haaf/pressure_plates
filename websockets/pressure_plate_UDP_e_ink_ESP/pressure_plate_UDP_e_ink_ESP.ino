@@ -11,7 +11,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <time.h>
 
-#define SERIAL_BAUD_NUM   74880
+#define SERIAL_BAUD_NUM   115200
 
 #define   BUTTON_PIN    4
 #define   LED_STRIP     2
@@ -41,7 +41,8 @@ time_t lastTimeStepped;
 
 #include "wifiAccessData.h"
 
-const char* usedIP = laptopIP; //TODO change here
+//const char* usedIP = laptopIP; 
+const char* usedIP = otherESPIP; 
 
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
