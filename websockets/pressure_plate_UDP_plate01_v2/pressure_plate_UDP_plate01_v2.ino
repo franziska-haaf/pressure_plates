@@ -37,6 +37,7 @@ WiFiUDP Udp;
 unsigned int localUdpPort = 4210;  // local port to listen on
 char incomingPacket[255];  // buffer for incoming packets
 
+time_t lastTimeStepped;
 uint32_t lastSteppedColor;
 
 #include "wifiAccessData.h"
@@ -76,10 +77,10 @@ void loop() {
   if (buttonState == LOW) {
     Serial.println("Got stepped on");
     //------Save Timestamp
-    time_t timestamp = time(nullptr);
-    Serial.println(timestamp);
+    lastTimeStepped = time(nullptr);
+    Serial.println(lastTimeStepped);
     //------ Tell other plate
-    sendTimestampAndColorToOtherPlate(timestamp); //give timestamp + color! check if the got the same color!!!
+    sendTimestampAndColorToOtherPlate(lastTimeStepped); //give timestamp + color! check if the got the same color!!!
   }
   delay(1000);
 
@@ -107,6 +108,7 @@ void loop() {
       char *bufferString;
       time_t receivedTimestamp = strtoul(incomingPacket, &bufferString, 15);
       //todo vergleichen und zurück melden wer gewonnen hat
+      
     }
   }
 }
