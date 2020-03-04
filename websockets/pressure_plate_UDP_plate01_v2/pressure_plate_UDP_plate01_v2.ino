@@ -30,7 +30,7 @@ uint32_t turquoise = strip.Color(0, 255, 145);      // 2
 uint32_t red = strip.Color(255, 0, 0);              // 3
 uint32_t green = strip.Color(0, 255, 0);            // 4
 uint32_t blue = strip.Color(0, 0, 255);             // 5
-uint32_t yellow = strip.Color(255, 255, 0);         // 7
+uint32_t yellow = strip.Color(255, 255, 0);         // 6
 uint32_t colors [7] = {pink, orange, turquoise, red, green, blue, yellow};
 int currentColor = 0; //can be: 0 - 6
 
@@ -81,9 +81,8 @@ void loop() {
     //------Save Timestamp
     time_t timestamp = time(nullptr);
     Serial.println(timestamp);
-
     //------ Tell other plate
-    sendTimestampToOtherPlate(timestamp); //give timestamp + color! check if the got the same color!!!
+    sendTimestampAndColorToOtherPlate(timestamp); //give timestamp + color! check if the got the same color!!!
   }
   delay(1000);
 
@@ -96,6 +95,7 @@ void loop() {
     if (len > 0) {
       incomingPacket[len] = 0;
     }
+    //------ Read content of package
     Serial.printf("got %s\n", incomingPacket);
     char *bufferString;
     time_t receivedTimestamp = strtoul(incomingPacket, &bufferString, 15);
@@ -113,10 +113,29 @@ void sendTimestampToOtherPlate(time_t timestamp) {
   //time_t value    long int    1583315675
   char timestampBuffer [15];
   snprintf (timestampBuffer, 15, "%ld", timestamp);
-  Serial.printf("send %s\n",timestampBuffer);
-  
+  Serial.printf("send %s\n", timestampBuffer);
+
   Udp.beginPacket("192.168.43.46", 4210);
-  Udp.write(timestampBuffer); 
+  Udp.write(timestampBuffer);
+  Udp.endPacket();
+}
+
+/**
+   Send timestamp and the current color to the other plate
+*/
+void sendTimestampAndColorToOtherPlate(time_t timestamp) {
+  //time_t value    long int    1583315675
+  char timestampBuffer [15];
+  snprintf (timestampBuffer, 15, "%ld", timestamp);
+  //create char of timestamp + current color
+  char packageToSend[15];
+  sprintf(packageToSend, "%d%s", currentColor, timestampBuffer);
+  
+  Serial.println("send package ");
+  Serial.printf(packageToSend);
+
+  Udp.beginPacket("192.168.43.46", 4210);
+  Udp.write(packageToSend);
   Udp.endPacket();
 }
 
@@ -129,7 +148,6 @@ unsigned long timeNow = 0;
 void rotateColors() {
   if ((unsigned long)(millis() - timeNow) > waitTime) {
     timeNow = millis();
-    Serial.println("Change color");
     setToRandomColor();
   }
 }
@@ -138,5 +156,7 @@ void setToRandomColor() {
   int randNumber = random(0, 7);
   strip.fill( colors[randNumber], 0, strip.numPixels() - 1);
   currentColor = randNumber;
+  Serial.println("set current color ");
+  Serial.println(currentColor);
   strip.show();
 }
