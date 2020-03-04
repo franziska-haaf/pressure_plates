@@ -11,7 +11,6 @@
 #include <Adafruit_NeoPixel.h>
 #include <time.h>
 
-#define OTHER_PLATE_IP    "192.168.178.24"
 #define SERIAL_BAUD_NUM   74880
 
 #define   BUTTON_PIN    4
@@ -34,14 +33,13 @@ uint32_t yellow = strip.Color(255, 255, 0);         // 6
 uint32_t colors [7] = {pink, orange, turquoise, red, green, blue, yellow};
 int currentColor = 0; //can be: 0 - 6
 
-const char* ssid = "OnePlus 5T";
-const char* password = "TeddyIstBraun";
-
 WiFiUDP Udp;
 unsigned int localUdpPort = 4210;  // local port to listen on
 char incomingPacket[255];  // buffer for incoming packets
 
 uint32_t lastSteppedColor;
+
+#include "wifiAccessData.h"
 
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
@@ -98,8 +96,11 @@ void loop() {
     Serial.printf("got %s\n", incomingPacket);
     Serial.printf("length of the package %d\n", strlen (incomingPacket));
     //A: we got a boolean telling us if we won or not
-    if (strlen (incomingPacket) <= 2) { //2, because I am not sure if the ESP adds a closing \0
-      //todo its a boolean
+    if ((strcmp(incomingPacket, "1") == 0)) {
+      winnerLights();
+    }
+    else if ((strcmp(incomingPacket, "0") == 0)) {
+      looserLights();
     }
     //B: we got a color + timestamp
     else {
@@ -139,7 +140,7 @@ void sendTimestampAndColorToOtherPlate(time_t timestamp) {
   Serial.println("send package ");
   Serial.println(packageToSend);
 
-  Udp.beginPacket("192.168.43.46", 4210);
+  Udp.beginPacket(laptopIP, 4210);
   Udp.write(packageToSend);
   Udp.endPacket();
 }
@@ -163,5 +164,32 @@ void setToRandomColor() {
   currentColor = randNumber;
   Serial.println("set current color ");
   Serial.println(currentColor);
+  strip.show();
+}
+
+
+void winnerLights() {
+  for (int rounds = 5; rounds >= 0; rounds--) {
+    for (int i = 0; i <= 6; i++) {
+      strip.fill( colors[i], 0, strip.numPixels() - 1);
+      strip.show();
+      delay(50);
+    }
+  }
+  strip.fill( colors[currentColor], 0, strip.numPixels() - 1);
+  strip.show();
+}
+
+void looserLights() {
+  strip.fill(red, 0, strip.numPixels() - 1);
+  strip.show();
+  delay(10);
+  for (int i = 255; i >= 0; i--) {
+    strip.fill( strip.Color(i, 0, 0), 0, strip.numPixels() - 1);
+    strip.show();
+    delay(5);
+  }
+  delay(500);
+  strip.fill( colors[currentColor], 0, strip.numPixels() - 1);
   strip.show();
 }
