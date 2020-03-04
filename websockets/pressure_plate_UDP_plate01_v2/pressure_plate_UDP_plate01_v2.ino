@@ -96,10 +96,9 @@ void loop() {
     if (len > 0) {
       incomingPacket[len] = 0;
     }
-    Serial.printf("UDP packet contents: %s\n", incomingPacket);
+    Serial.printf("got %s\n", incomingPacket);
     char *bufferString;
     time_t i = strtoul(incomingPacket, &bufferString, 10);
-    Serial.printf(ctime(&i));
 
     //A: we got a boolean telling us if we won or not
     //B: we got a color + timestamp
@@ -112,8 +111,8 @@ void loop() {
 */
 void sendTimestampToOtherPlate(time_t timestamp) {
   //time_t value    long int    1583315675
-  char timestampBuffer [10];
-  snprintf (timestampBuffer, 10, "%ld", timestamp);
+  char timestampBuffer [15];
+  snprintf (timestampBuffer, 15, "%ld", timestamp);
   Serial.printf("send %s\n",timestampBuffer);
   
   Udp.beginPacket("192.168.43.46", 4210);
