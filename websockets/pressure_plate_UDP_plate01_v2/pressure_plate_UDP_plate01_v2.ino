@@ -81,7 +81,6 @@ void loop() {
     //------Save Timestamp
     time_t timestamp = time(nullptr);
     Serial.println(timestamp);
-    Serial.println(ctime(&timestamp));
 
     //------ Tell other plate
     sendTimestampToOtherPlate(timestamp); //give timestamp + color! check if the got the same color!!!
@@ -97,46 +96,13 @@ void loop() {
     if (len > 0) {
       incomingPacket[len] = 0;
     }
-    Serial.printf("UDP packet contents: %s\n", incomingPacket);
-    time_t convertedTimestamp = convertStringToTime_t(incomingPacket);
-    Serial.printf(ctime(&convertedTimestamp));
+    Serial.printf("got %s\n", incomingPacket);
+    char *bufferString;
+    time_t i = strtoul(incomingPacket, &bufferString, 10);
 
     //A: we got a boolean telling us if we won or not
     //B: we got a color + timestamp
   }
-}
-
-/**
-   Convert a timestamp given in format
-   Fri Feb 28 16:29:31 2020
-   to a time_t object
-*/
-time_t convertStringToTime_t(char timestamp []) {
-  time_t result = time(NULL);
-  const char *timestampString = timestamp;
-  char weekDay [3];
-  char month [3];
-  int dd, hh, mm, ss, yyyy = 0;
-  struct tm timestampFromString = {0};
-
-  //input     Fri Feb 28 16:40:11 2020
-  //output    Wed Dec 31 23:59:59 1969 TODO always same output?!
-
-  sscanf(timestampString, "%s %s %d %d:%d:%d %d", &weekDay, &month, &dd, &hh, &mm, &ss, &yyyy);
-  Serial.printf("Weekday: %s", weekDay);
-  Serial.printf("month: %s", month);
-  timestampFromString.tm_year = yyyy - 1900; //years since 1900
-  timestampFromString.tm_mon = month; //todo convert to int
-  timestampFromString.tm_wday = weekDay; //todo convert to int
-  timestampFromString.tm_mday = dd;
-  timestampFromString.tm_hour = hh;
-  timestampFromString.tm_min = mm;
-  timestampFromString.tm_sec = ss;
-  timestampFromString.tm_isdst = -1;
-
-  result = mktime(&timestampFromString);
-  // mktime   Convert tm structure to time_t
-  return result;
 }
 
 
@@ -144,8 +110,13 @@ time_t convertStringToTime_t(char timestamp []) {
    Send timestamp to the other plate
 */
 void sendTimestampToOtherPlate(time_t timestamp) {
+  //time_t value    long int    1583315675
+  char timestampBuffer [15];
+  snprintf (timestampBuffer, 15, "%ld", timestamp);
+  Serial.printf("send %s\n",timestampBuffer);
+  
   Udp.beginPacket("192.168.43.46", 4210);
-  Udp.write(ctime(&timestamp));
+  Udp.write(timestampBuffer); 
   Udp.endPacket();
 }
 
