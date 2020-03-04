@@ -96,14 +96,14 @@ void loop() {
     }
     //------ Read content of package
     Serial.printf("received %s\n", incomingPacket);
-    //A: we got a boolean char telling us if we won or not
+    //A: we got a boolean char telling us if we won or not (we got pressed, and send color+timestamp to the other plate to check )
     if ((strcmp(incomingPacket, "1") == 0)) {
       winnerLights();
     }
     else if ((strcmp(incomingPacket, "0") == 0)) {
       looserLights();
     }
-    //B: we got a color + timestamp
+    //B: we got a color + timestamp (the other plate got pressed, and send a timestamp for us to check)
     else {
       //------ Split into color and timestamp
       //[0]        color
@@ -134,8 +134,8 @@ void loop() {
         }
       }
       else {
-        sendOtherPlateItWon();
-        looserLights();
+        sendOtherPlateItLost();
+        winnerLights();
       }
     }
   }
