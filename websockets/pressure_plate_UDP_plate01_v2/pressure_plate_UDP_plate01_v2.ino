@@ -38,7 +38,6 @@ unsigned int localUdpPort = 4210;  // local port to listen on
 char incomingPacket[255];  // buffer for incoming packets
 
 time_t lastTimeStepped;
-uint32_t lastSteppedColor;
 
 #include "wifiAccessData.h"
 
@@ -121,9 +120,18 @@ void loop() {
       time_t receivedTimestamp = strtoul(receivedTimestampString, &bufferString, 10);
       Serial.printf("received timestamp %ld\n", receivedTimestamp);
       //------ Check color
-      if (receivedColor == lastSteppedColor) {
+      Serial.printf("comparing colors %d and %d\n", receivedColor, currentColor);
+      if (receivedColor == currentColor) {
         //------ Check timestamp
         //todo check timestamp
+        Serial.printf("comparing timestamps %ld and %ld\n", lastTimeStepped, receivedTimestamp);
+        if (difftime(lastTimeStepped, receivedTimestamp) < 0) {
+          sendOtherPlateItLost();
+          winnerLights();
+        } else {
+          sendOtherPlateItWon();
+          looserLights();
+        }
       }
       else {
         sendOtherPlateItWon();
