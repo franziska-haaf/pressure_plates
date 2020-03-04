@@ -98,7 +98,7 @@ void loop() {
     }
     Serial.printf("got %s\n", incomingPacket);
     char *bufferString;
-    time_t i = strtoul(incomingPacket, &bufferString, 10);
+    time_t receivedTimestamp = strtoul(incomingPacket, &bufferString, 15);
 
     //A: we got a boolean telling us if we won or not
     //B: we got a color + timestamp
