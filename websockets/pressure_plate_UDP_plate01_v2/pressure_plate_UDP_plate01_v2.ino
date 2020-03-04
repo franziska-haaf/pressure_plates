@@ -40,7 +40,6 @@ const char* password = "TeddyIstBraun";
 WiFiUDP Udp;
 unsigned int localUdpPort = 4210;  // local port to listen on
 char incomingPacket[255];  // buffer for incoming packets
-char replyPacket[] = "Hi there! Got the message :-)";  // a reply string to send back
 
 uint32_t lastSteppedColor;
 
@@ -97,11 +96,17 @@ void loop() {
     }
     //------ Read content of package
     Serial.printf("got %s\n", incomingPacket);
-    char *bufferString;
-    time_t receivedTimestamp = strtoul(incomingPacket, &bufferString, 15);
-
+    Serial.printf("length of the package %d\n", strlen (incomingPacket));
     //A: we got a boolean telling us if we won or not
+    if (strlen (incomingPacket) <= 2) { //2, because I am not sure if the ESP adds a closing \0
+      //todo its a boolean
+    }
     //B: we got a color + timestamp
+    else {
+      char *bufferString;
+      time_t receivedTimestamp = strtoul(incomingPacket, &bufferString, 15);
+      //todo vergleichen und zurück melden wer gewonnen hat
+    }
   }
 }
 
@@ -130,9 +135,9 @@ void sendTimestampAndColorToOtherPlate(time_t timestamp) {
   //create char of timestamp + current color
   char packageToSend[15];
   sprintf(packageToSend, "%d%s", currentColor, timestampBuffer);
-  
+
   Serial.println("send package ");
-  Serial.printf(packageToSend);
+  Serial.println(packageToSend);
 
   Udp.beginPacket("192.168.43.46", 4210);
   Udp.write(packageToSend);
