@@ -11,11 +11,11 @@
 #include <Adafruit_NeoPixel.h>
 #include <time.h>
 
-#define SERIAL_BAUD_NUM   74880
+#define SERIAL_BAUD_NUM   115200
 
 #define   BUTTON_PIN    4
-#define   LED_STRIP     2
-#define   NUMPIXELS     53
+#define   LED_STRIP     5
+#define   NUMPIXELS     7   //todo change back to 53
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
@@ -47,12 +47,6 @@ const char* usedIP = otherESPIP;
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
 
-  strip.begin();
-  strip.show();
-  strip.setBrightness(150); // Set BRIGHTNESS to about 1/5 (max = 255)
-  setToRandomColor();
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-
   Serial.println();
 
   Serial.printf("Connecting to %s ", ssid);
@@ -68,6 +62,13 @@ void setup() {
 
   // Initialize Time
   configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+
+  strip.begin();
+  strip.show();
+  strip.setBrightness(150); // Set BRIGHTNESS to about 1/5 (max = 255)
+  setToRandomColor();
+  //pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BUTTON_PIN, INPUT);
 }
 
 void loop() {
@@ -76,7 +77,7 @@ void loop() {
   // read the state of the pushbutton value:
   buttonState = digitalRead(BUTTON_PIN);
   //-----------------------------GOT STEPPED ON: SEND PACKAGE
-  if (buttonState == LOW) {
+  if (buttonState == HIGH) {
     Serial.println("Got stepped on");
     //------Save Timestamp
     lastTimeStepped = time(nullptr);
