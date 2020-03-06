@@ -182,10 +182,10 @@ void sendTimestampAndColorToOtherPlate(time_t timestamp) {
 }
 
 /**
-     Rotate all the colors every 30 seconds.
+     Rotate all the colors every x seconds.
      Using millis(), this won' stop the program
 */
-int waitTime = 30000; //30 seconds
+int waitTime = 10000; //10 seconds
 unsigned long timeNow = 0;
 void rotateColors() {
   if ((unsigned long)(millis() - timeNow) > waitTime) {
