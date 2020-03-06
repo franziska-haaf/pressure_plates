@@ -1,5 +1,5 @@
-# pressure_plates
-A prototype in the context of my master thesis "Exploration von interaktiven und unaufdringlichen Interfaces in einer semi-public Meetup Situation" (en. "Exploration of interactive and unobtrusive interfaces in a semi-public meetup situation") WS19/30.
+# Pressure plates
+An iterative prototype in the context of my master thesis "Exploration von interaktiven und unaufdringlichen Interfaces in einer semi-public Meetup Situation" (en. "Exploration of interactive and unobtrusive interfaces in a semi-public meetup situation") WS19/30 got created.
 It consists of two plates lying on the floor, that communicate with each other and present a game.
 The plates were refined over 3 iterations and consist of multiple metal parts that get assembled like shown in the following graphic:
 ![plate prototype assembling](/img/pressure_plate_assembling-09-09.png)
