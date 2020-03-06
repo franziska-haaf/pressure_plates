@@ -127,7 +127,7 @@ void loop() {
         //------ Check timestamp
         //todo check timestamp
         Serial.printf("comparing timestamps %ld and %ld\n", lastTimeStepped, receivedTimestamp);
-        if (difftime(lastTimeStepped, receivedTimestamp) < 0) {
+        if (difftime(lastTimeStepped, receivedTimestamp) > 0) {
           sendOtherPlateItLost();
           winnerLights();
         } else {
