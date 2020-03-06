@@ -67,7 +67,7 @@ void setup() {
   strip.show();
   strip.setBrightness(150); // Set BRIGHTNESS to about 1/5 (max = 255)
   setToRandomColor();
-  //pinMode(BUTTON_PIN, INPUT_PULLUP);
+  //pinMode(BUTTON_PIN, INPUT_PULLUP); //todo change to this for using the plates as a button
   pinMode(BUTTON_PIN, INPUT);
 }
 
