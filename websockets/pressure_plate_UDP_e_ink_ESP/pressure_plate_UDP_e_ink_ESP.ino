@@ -30,8 +30,9 @@ uint32_t red = strip.Color(255, 0, 0);              // 3
 uint32_t green = strip.Color(0, 255, 0);            // 4
 uint32_t blue = strip.Color(0, 0, 255);             // 5
 uint32_t yellow = strip.Color(255, 255, 0);         // 6
-uint32_t colors [7] = {pink, orange, turquoise, red, green, blue, yellow};
-int currentColor = 0; //can be: 0 - 6
+uint32_t colors [4] = {pink, green, blue, yellow};
+const int amountOfColors = 4;
+int currentColor = 0; //can be: 0 - 4
 
 WiFiUDP Udp;
 unsigned int localUdpPort = 4210;  // local port to listen on
@@ -195,7 +196,7 @@ void rotateColors() {
 }
 
 void setToRandomColor() {
-  int randNumber = random(0, 7);
+  int randNumber = random(0, amountOfColors);
   strip.fill( colors[randNumber], 0, strip.numPixels() - 1);
   currentColor = randNumber;
   Serial.printf("set current color %d\n", currentColor);
@@ -205,7 +206,7 @@ void setToRandomColor() {
 
 void winnerLights() {
   for (int rounds = 5; rounds >= 0; rounds--) {
-    for (int i = 0; i <= 6; i++) {
+    for (int i = 0; i <= amountOfColors; i++) {
       strip.fill( colors[i], 0, strip.numPixels() - 1);
       strip.show();
       delay(50);
