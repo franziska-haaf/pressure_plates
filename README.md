@@ -5,7 +5,7 @@ The thesis examines the use of unobtrusive, interactive interfaces in a semi-pub
 
 This prototype consists of two plates lying on the floor, that communicate with each other and present a game.
 The plates were refined over 3 iterations and consist of multiple metal parts that get assembled like shown in the following graphic:
-![plate prototype assembling](/img/pressure_plate_assembling-09-09.png)
+![plate prototype assembling](/img/pressure_plate_assembling-09-09.png | width=400px)
 
 Two different ESP8266 got used for the prototypes (solely on the basis of availability).
 - [Waveshare e-Paper ESP8266 Driver Board](https://www.waveshare.com/e-paper-esp8266-driver-board.htm)
