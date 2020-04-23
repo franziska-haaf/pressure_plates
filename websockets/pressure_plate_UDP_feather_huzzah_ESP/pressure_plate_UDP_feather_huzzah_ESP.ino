@@ -15,8 +15,7 @@
 
 #define   BUTTON_PIN    4
 #define   LED_STRIP     5
-#define   NUMPIXELS     7   //todo change back to 53
-
+#define   NUMPIXELS     48   
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
 int buttonState = 0;         // variable for reading the pushbutton status
@@ -49,6 +48,12 @@ const char* usedIP = otherESPIP;
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
 
+  strip.begin();
+  strip.show();
+  strip.setBrightness(100); //150 Set BRIGHTNESS to about 1/5 (max = 255)
+  setToRandomColor();
+  pinMode(BUTTON_PIN, INPUT_PULLUP); 
+
   Serial.println();
 
   Serial.printf("Connecting to %s ", ssid);
@@ -64,13 +69,6 @@ void setup() {
 
   // Initialize Time
   configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
-
-  strip.begin();
-  strip.show();
-  strip.setBrightness(150); // Set BRIGHTNESS to about 1/5 (max = 255)
-  setToRandomColor();
-  //pinMode(BUTTON_PIN, INPUT_PULLUP); //todo change to this for using the plates as a button
-  pinMode(BUTTON_PIN, INPUT);
 }
 
 void loop() {
@@ -79,7 +77,7 @@ void loop() {
   // read the state of the pushbutton value:
   buttonState = digitalRead(BUTTON_PIN);
   //-----------------------------GOT STEPPED ON: SEND PACKAGE
-  if (buttonState == HIGH) {
+  if (buttonState == LOW) {
     Serial.println("Got stepped on");
     //------Save Timestamp
     lastTimeStepped = time(nullptr);

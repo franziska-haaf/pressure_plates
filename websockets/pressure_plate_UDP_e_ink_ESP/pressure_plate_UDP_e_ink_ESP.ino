@@ -19,7 +19,7 @@
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
-int buttonState = 0;         // variable for reading the pushbutton status
+int buttonState2 = 0;         // variable for reading the pushbutton status
 
 uint32_t black = strip.Color(0, 0, 0);
 
@@ -50,7 +50,7 @@ void setup() {
 
   strip.begin();
   strip.show();
-  strip.setBrightness(150); // Set BRIGHTNESS to about 1/5 (max = 255)
+  strip.setBrightness(100); //150 Set BRIGHTNESS to about 1/5 (max = 255)
   setToRandomColor();
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
@@ -75,9 +75,9 @@ void loop() {
   rotateColors();
 
   // read the state of the pushbutton value:
-  buttonState = digitalRead(BUTTON_PIN);
+  buttonState2 = digitalRead(BUTTON_PIN);
   //-----------------------------GOT STEPPED ON: SEND PACKAGE
-  if (buttonState == LOW) {
+  if (buttonState2 == LOW) {
     Serial.println("Got stepped on");
     //------Save Timestamp
     lastTimeStepped = time(nullptr);
