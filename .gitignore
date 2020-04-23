@@ -1,2 +1,10 @@
 
 *.h
+
+hardware/.DS_Store
+
+websockets/.DS_Store
+
+img/.DS_Store
+
+.DS_Store
