@@ -15,7 +15,7 @@
 
 #define   BUTTON_PIN    4
 #define   LED_STRIP     5
-#define   NUMPIXELS     48   
+#define   NUMPIXELS     49   
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
 int buttonState = 0;         // variable for reading the pushbutton status
@@ -85,7 +85,7 @@ void loop() {
     //------ Tell other plate
     sendTimestampAndColorToOtherPlate(lastTimeStepped); //give timestamp + color! check if the got the same color!!!
   }
-  delay(1000);
+  //delay(1000);
 
   //-----------------------------RECEIVE PACKAGES
   int packetSize = Udp.parsePacket();
@@ -144,13 +144,13 @@ void loop() {
 }
 
 void sendOtherPlateItWon() {
-  Udp.beginPacket(usedIP, 4210);
+  Udp.beginPacket(usedIP, localUdpPort);
   Udp.write("1");
   Udp.endPacket();
 }
 
 void sendOtherPlateItLost() {
-  Udp.beginPacket(usedIP, 4210);
+  Udp.beginPacket(usedIP, localUdpPort);
   Udp.write("0");
   Udp.endPacket();
 }
@@ -161,7 +161,7 @@ void sendTimestampToOtherPlate(time_t timestamp) {
   snprintf (timestampBuffer, 15, "%ld", timestamp);
   Serial.printf("send %s\n", timestampBuffer);
 
-  Udp.beginPacket(usedIP, 4210);
+  Udp.beginPacket(usedIP, localUdpPort);
   Udp.write(timestampBuffer);
   Udp.endPacket();
 }
@@ -174,10 +174,12 @@ void sendTimestampAndColorToOtherPlate(time_t timestamp) {
   char packageToSend[15];
   sprintf(packageToSend, "%d%s", currentColor, timestampBuffer);
 
-  Serial.println("send package ");
+  Serial.println("send package:");
   Serial.println(packageToSend);
+  Serial.println("to IP:");
+  Serial.println(usedIP);
 
-  Udp.beginPacket(usedIP, 4210);
+  Udp.beginPacket(usedIP, localUdpPort);
   Udp.write(packageToSend);
   Udp.endPacket();
 }
@@ -225,7 +227,7 @@ void looserLights() {
     strip.show();
     delay(5);
   }
-  delay(500);
+  //delay(500);
   strip.fill( colors[currentColor], 0, strip.numPixels() - 1);
   strip.show();
 }
