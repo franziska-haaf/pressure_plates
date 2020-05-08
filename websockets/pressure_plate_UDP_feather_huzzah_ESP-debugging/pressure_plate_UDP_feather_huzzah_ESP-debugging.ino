@@ -129,48 +129,44 @@ void receivePackage() {
     }
     //------ Read content of package
     Serial.printf("received %s\n", incomingPacket);
+    decodeColorAndTimestampPackageMINIMAL();
   }
 }
 
-void loopORIGINAL() {
-  rotateColors();
-
-  // read the state of the pushbutton value:
-  buttonState = digitalRead(BUTTON_PIN);
-  //-----------------------------GOT STEPPED ON: SEND PACKAGE
-  if (buttonState == LOW) {
-    Serial.println("Got stepped on");
-    //------Save Timestamp
-    lastTimeStepped = time(nullptr);
-    Serial.println(lastTimeStepped);
-    //------ Tell other plate
-    sendTimestampAndColorToOtherPlate(lastTimeStepped); //give timestamp + color! check if the got the same color!!!
-  }
-  //delay(1000);
-
-  //-----------------------------RECEIVE PACKAGES
-  int packetSize = Udp.parsePacket();
-  if (packetSize) {
-    // receive incoming UDP packets
-    Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
-    int len = Udp.read(incomingPacket, 255);
-    if (len > 0) {
-      incomingPacket[len] = 0;
-    }
-    //------ Read content of package
-    Serial.printf("received %s\n", incomingPacket);
-    //A: we got a boolean char telling us if we won or not (we got pressed, and send color+timestamp to the other plate to check )
-    if ((strcmp(incomingPacket, "1") == 0)) {
-      winnerLights();
-    }
-    else if ((strcmp(incomingPacket, "0") == 0)) {
-      looserLights();
-    }
-    //B: we got a color + timestamp (the other plate got pressed, and send a timestamp for us to check)
-    else {
-      decodeColorAndTimestampPackage();
-    }
-  }
+void decodeColorAndTimestampPackageMINIMAL() {
+  //------ Split into color and timestamp
+  //[0]        color
+  //[1]-[10]   timestamp
+  char receivedColorString = incomingPacket[0];
+  int receivedColor = receivedColorString - 48;
+  Serial.printf("received color %d\n", receivedColor);
+  
+  char receivedTimestampString [10];
+  for (int j = 1; j <= 10; j++) {
+    receivedTimestampString[j - 1] = incomingPacket[j];
+  }  
+  char *bufferString;
+  time_t receivedTimestamp = strtoul(receivedTimestampString, &bufferString, 10);
+  Serial.printf("received timestamp %ld\n", receivedTimestamp);
+  
+//  //------ Check color
+//  Serial.printf("comparing colors %d and %d\n", receivedColor, currentColor);
+//  if (receivedColor == currentColor) {
+//    //------ Check timestamp
+//    //todo check timestamp
+//    Serial.printf("comparing timestamps %ld and %ld\n", lastTimeStepped, receivedTimestamp);
+//    if (difftime(lastTimeStepped, receivedTimestamp) > 0) {
+//      sendOtherPlateItLost();
+//      winnerLights();
+//    } else {
+//      sendOtherPlateItWon();
+//      looserLights();
+//    }
+//  }
+//  else {
+//    sendOtherPlateItLost();
+//    winnerLights();
+//  }
 }
 
 void decodeColorAndTimestampPackage() {
@@ -295,4 +291,48 @@ void looserLights() {
   //delay(500);
   strip.fill( colors[currentColor], 0, strip.numPixels() - 1);
   strip.show();
+}
+
+/*--------------------
+ORIGINAL LOOP----------------------------
+----------------------*/
+void loopORIGINAL() {
+  rotateColors();
+
+  // read the state of the pushbutton value:
+  buttonState = digitalRead(BUTTON_PIN);
+  //-----------------------------GOT STEPPED ON: SEND PACKAGE
+  if (buttonState == LOW) {
+    Serial.println("Got stepped on");
+    //------Save Timestamp
+    lastTimeStepped = time(nullptr);
+    Serial.println(lastTimeStepped);
+    //------ Tell other plate
+    sendTimestampAndColorToOtherPlate(lastTimeStepped); //give timestamp + color! check if the got the same color!!!
+  }
+  //delay(1000);
+
+  //-----------------------------RECEIVE PACKAGES
+  int packetSize = Udp.parsePacket();
+  if (packetSize) {
+    // receive incoming UDP packets
+    Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+    int len = Udp.read(incomingPacket, 255);
+    if (len > 0) {
+      incomingPacket[len] = 0;
+    }
+    //------ Read content of package
+    Serial.printf("received %s\n", incomingPacket);
+    //A: we got a boolean char telling us if we won or not (we got pressed, and send color+timestamp to the other plate to check )
+    if ((strcmp(incomingPacket, "1") == 0)) {
+      winnerLights();
+    }
+    else if ((strcmp(incomingPacket, "0") == 0)) {
+      looserLights();
+    }
+    //B: we got a color + timestamp (the other plate got pressed, and send a timestamp for us to check)
+    else {
+      decodeColorAndTimestampPackage();
+    }
+  }
 }
