@@ -106,16 +106,15 @@ void loop() {
   receivePackage();
 }
 
-void plateGotActivated(){
-  // button is pressed
-      if (buttonState == HIGH) {
-        setToRandomColor();
-        lastTimeStepped = time(nullptr);
-        Serial.println(lastTimeStepped);
-        Udp.beginPacket(otherESPIP, 4210);
-        Udp.write("Hi :)");
-        Udp.endPacket();
-      }
+void plateGotActivated() {
+  if (buttonState == HIGH) {
+    setToRandomColor();
+    lastTimeStepped = time(nullptr);
+    Serial.println(lastTimeStepped);
+    Udp.beginPacket(otherESPIP, 4210);
+    Udp.write("Hi :)");
+    Udp.endPacket();
+  }
 }
 
 void receivePackage() {
