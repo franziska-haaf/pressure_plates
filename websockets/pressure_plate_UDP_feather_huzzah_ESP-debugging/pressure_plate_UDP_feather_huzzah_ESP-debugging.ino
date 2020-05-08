@@ -96,8 +96,18 @@ void loop() {
     // if the button state has changed:
     if (buttonReading != buttonState) {
       buttonState = buttonReading;
+      plateGotActivated();
+    }
+  }
 
-      // button is pressed
+  // save the buttonReading. Next time through the loop, it'll be the lastButtonState:
+  lastButtonState = buttonReading;
+
+  receivePackage();
+}
+
+void plateGotActivated(){
+  // button is pressed
       if (buttonState == HIGH) {
         setToRandomColor();
         lastTimeStepped = time(nullptr);
@@ -106,13 +116,6 @@ void loop() {
         Udp.write("Hi :)");
         Udp.endPacket();
       }
-    }
-  }
-
-  // save the buttonReading. Next time through the loop, it'll be the lastButtonState:
-  lastButtonState = buttonReading;
-
-  receivePackage();
 }
 
 void receivePackage() {
