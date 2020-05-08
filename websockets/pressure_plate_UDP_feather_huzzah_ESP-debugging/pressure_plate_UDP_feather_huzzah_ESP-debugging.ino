@@ -76,6 +76,8 @@ int lastDebounceTime = 0;
 int debounceDelay = 50;
 
 void loop() {
+  rotateColors();
+  
   // read the state of the button into a local variable:
   int buttonReading = digitalRead(BUTTON_PIN);
 
