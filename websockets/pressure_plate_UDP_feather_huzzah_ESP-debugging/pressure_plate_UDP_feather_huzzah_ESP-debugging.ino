@@ -70,7 +70,48 @@ void setup() {
   // Initialize Time
   configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 }
-void loop2() {
+
+int lastButtonState = 0;
+int lastDebounceTime = 0;
+int debounceDelay = 50;
+
+void loop() {
+    // read the state of the switch into a local variable:
+    int reading = digitalRead(BUTTON_PIN);
+
+    // check to see if you just pressed the button
+    // (i.e. the input went from LOW to HIGH), and you've waited long enough
+    // since the last press to ignore any noise:
+
+    // If the switch changed, due to noise or pressing:
+    if (reading != lastButtonState) {
+        // reset the debouncing timer
+        lastDebounceTime = millis();
+    }
+
+    if ((millis() - lastDebounceTime) > debounceDelay) {
+        // whatever the reading is at, it's been there for longer than the debounce
+        // delay, so take it as the actual current state:
+
+        // if the button state has changed:
+        if (reading != buttonState) {
+            buttonState = reading;
+
+            // only toggle the LED if the new button state is HIGH
+            if (buttonState == HIGH) {
+                setToRandomColor();
+            }
+        }
+    }
+
+    // set the LED:
+    //setToRandomColor();
+
+    // save the reading. Next time through the loop, it'll be the lastButtonState:
+    lastButtonState = reading;
+}
+
+void loop1() {
   // read the state of the pushbutton value:
   buttonState = digitalRead(BUTTON_PIN);
   
@@ -84,7 +125,7 @@ void loop2() {
   }
 }
 
-void loop() {
+void loop2() {
   rotateColors();
 
   // read the state of the pushbutton value:
