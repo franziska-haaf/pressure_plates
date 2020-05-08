@@ -113,6 +113,10 @@ void loop() {
   lastButtonState = reading;
 
   //-----------------------------RECEIVE PACKAGES
+  receivePackage();
+}
+
+void receivePackage() {
   int packetSize = Udp.parsePacket();
   if (packetSize) {
     // receive incoming UDP packets
