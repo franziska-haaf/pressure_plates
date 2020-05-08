@@ -111,9 +111,12 @@ void plateGotActivated() {
     setToRandomColor();
     lastTimeStepped = time(nullptr);
     Serial.println(lastTimeStepped);
-    Udp.beginPacket(otherESPIP, 4210);
-    Udp.write("Hi :)");
-    Udp.endPacket();
+
+    sendTimestampAndColorToOtherPlate(lastTimeStepped); //give timestamp + color! check if the got the same color!!!
+    
+//    Udp.beginPacket(otherESPIP, 4210);
+//    Udp.write("Hi :)");
+//    Udp.endPacket();
   }
 }
 
@@ -129,20 +132,6 @@ void receivePackage() {
     //------ Read content of package
     Serial.printf("received %s\n", incomingPacket);
     winnerLights();
-  }
-}
-
-void loopMINIMAL() {
-  // read the state of the pushbutton value:
-  buttonState = digitalRead(BUTTON_PIN);
-
-  if (buttonState == LOW) {
-    setToRandomColor();
-    lastTimeStepped = time(nullptr);
-    Serial.println(lastTimeStepped);
-    Udp.beginPacket("10.5.10.36", 4210);
-    Udp.write("41588765187");
-    Udp.endPacket();
   }
 }
 
