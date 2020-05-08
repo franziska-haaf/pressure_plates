@@ -100,15 +100,31 @@ void loop() {
             // only toggle the LED if the new button state is HIGH
             if (buttonState == HIGH) {
                 setToRandomColor();
+                lastTimeStepped = time(nullptr);
+                Serial.println(lastTimeStepped);
+                Udp.beginPacket(otherESPIP, 4210);
+                Udp.write("Hi :)");
+                Udp.endPacket();
             }
         }
     }
 
-    // set the LED:
-    //setToRandomColor();
-
     // save the reading. Next time through the loop, it'll be the lastButtonState:
     lastButtonState = reading;
+
+    //-----------------------------RECEIVE PACKAGES
+    int packetSize = Udp.parsePacket();
+    if (packetSize) {
+      // receive incoming UDP packets
+      Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+      int len = Udp.read(incomingPacket, 255);
+      if (len > 0) {
+        incomingPacket[len] = 0;
+      }
+      //------ Read content of package
+      Serial.printf("received %s\n", incomingPacket);
+       winnerLights();
+     }
 }
 
 void loop1() {
@@ -153,7 +169,6 @@ void loop2() {
     //------ Read content of package
     Serial.printf("received %s\n", incomingPacket);
     //A: we got a boolean char telling us if we won or not (we got pressed, and send color+timestamp to the other plate to check )
-     winnerLights();
     if ((strcmp(incomingPacket, "1") == 0)) {
       winnerLights();
     }
