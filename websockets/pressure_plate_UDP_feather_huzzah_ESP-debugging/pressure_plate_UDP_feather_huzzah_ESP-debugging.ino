@@ -18,7 +18,7 @@
 #define   NUMPIXELS     49
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
-int buttonState = 0;         // variable for reading the pushbutton status
+int buttonState = 0;         // variable for buttonReading the pushbutton status
 
 uint32_t black = strip.Color(0, 0, 0);
 
@@ -76,28 +76,28 @@ int lastDebounceTime = 0;
 int debounceDelay = 50;
 
 void loop() {
-  // read the state of the switch into a local variable:
-  int reading = digitalRead(BUTTON_PIN);
+  // read the state of the button into a local variable:
+  int buttonReading = digitalRead(BUTTON_PIN);
 
   // check to see if you just pressed the button
   // (i.e. the input went from LOW to HIGH), and you've waited long enough
   // since the last press to ignore any noise:
 
   // If the switch changed, due to noise or pressing:
-  if (reading != lastButtonState) {
+  if (buttonReading != lastButtonState) {
     // reset the debouncing timer
     lastDebounceTime = millis();
   }
 
   if ((millis() - lastDebounceTime) > debounceDelay) {
-    // whatever the reading is at, it's been there for longer than the debounce
+    // whatever the buttonReading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
 
     // if the button state has changed:
-    if (reading != buttonState) {
-      buttonState = reading;
+    if (buttonReading != buttonState) {
+      buttonState = buttonReading;
 
-      // only toggle the LED if the new button state is HIGH
+      // button is pressed
       if (buttonState == HIGH) {
         setToRandomColor();
         lastTimeStepped = time(nullptr);
@@ -109,10 +109,9 @@ void loop() {
     }
   }
 
-  // save the reading. Next time through the loop, it'll be the lastButtonState:
-  lastButtonState = reading;
+  // save the buttonReading. Next time through the loop, it'll be the lastButtonState:
+  lastButtonState = buttonReading;
 
-  //-----------------------------RECEIVE PACKAGES
   receivePackage();
 }
 
