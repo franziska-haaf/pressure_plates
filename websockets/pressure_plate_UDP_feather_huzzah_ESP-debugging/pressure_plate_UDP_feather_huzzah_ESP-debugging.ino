@@ -77,7 +77,7 @@ int debounceDelay = 50;
 
 void loop() {
   rotateColors();
-  
+
   // read the state of the button into a local variable:
   int buttonReading = digitalRead(BUTTON_PIN);
 
@@ -115,10 +115,6 @@ void plateGotActivated() {
     Serial.println(lastTimeStepped);
 
     sendTimestampAndColorToOtherPlate(lastTimeStepped); //give timestamp + color! check if the got the same color!!!
-    
-//    Udp.beginPacket(otherESPIP, 4210);
-//    Udp.write("Hi :)");
-//    Udp.endPacket();
   }
 }
 
