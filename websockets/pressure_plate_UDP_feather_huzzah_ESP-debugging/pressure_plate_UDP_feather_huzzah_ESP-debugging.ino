@@ -15,7 +15,7 @@
 
 #define   BUTTON_PIN    4
 #define   LED_STRIP     5
-#define   NUMPIXELS     49   
+#define   NUMPIXELS     49
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
 int buttonState = 0;         // variable for reading the pushbutton status
@@ -42,8 +42,8 @@ time_t lastTimeStepped;
 
 #include "wifiAccessData.h"
 
-//const char* usedIP = laptopIP; 
-const char* usedIP = otherESPIP; 
+//const char* usedIP = laptopIP;
+const char* usedIP = otherESPIP;
 
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
@@ -52,7 +52,7 @@ void setup() {
   strip.show();
   strip.setBrightness(50); //150 Set BRIGHTNESS to about 1/5 (max = 255)
   setToRandomColor();
-  pinMode(BUTTON_PIN, INPUT_PULLUP); 
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   Serial.println();
 
@@ -76,72 +76,72 @@ int lastDebounceTime = 0;
 int debounceDelay = 50;
 
 void loop() {
-    // read the state of the switch into a local variable:
-    int reading = digitalRead(BUTTON_PIN);
+  // read the state of the switch into a local variable:
+  int reading = digitalRead(BUTTON_PIN);
 
-    // check to see if you just pressed the button
-    // (i.e. the input went from LOW to HIGH), and you've waited long enough
-    // since the last press to ignore any noise:
+  // check to see if you just pressed the button
+  // (i.e. the input went from LOW to HIGH), and you've waited long enough
+  // since the last press to ignore any noise:
 
-    // If the switch changed, due to noise or pressing:
-    if (reading != lastButtonState) {
-        // reset the debouncing timer
-        lastDebounceTime = millis();
-    }
+  // If the switch changed, due to noise or pressing:
+  if (reading != lastButtonState) {
+    // reset the debouncing timer
+    lastDebounceTime = millis();
+  }
 
-    if ((millis() - lastDebounceTime) > debounceDelay) {
-        // whatever the reading is at, it's been there for longer than the debounce
-        // delay, so take it as the actual current state:
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    // whatever the reading is at, it's been there for longer than the debounce
+    // delay, so take it as the actual current state:
 
-        // if the button state has changed:
-        if (reading != buttonState) {
-            buttonState = reading;
+    // if the button state has changed:
+    if (reading != buttonState) {
+      buttonState = reading;
 
-            // only toggle the LED if the new button state is HIGH
-            if (buttonState == HIGH) {
-                setToRandomColor();
-                lastTimeStepped = time(nullptr);
-                Serial.println(lastTimeStepped);
-                Udp.beginPacket(otherESPIP, 4210);
-                Udp.write("Hi :)");
-                Udp.endPacket();
-            }
-        }
-    }
-
-    // save the reading. Next time through the loop, it'll be the lastButtonState:
-    lastButtonState = reading;
-
-    //-----------------------------RECEIVE PACKAGES
-    int packetSize = Udp.parsePacket();
-    if (packetSize) {
-      // receive incoming UDP packets
-      Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
-      int len = Udp.read(incomingPacket, 255);
-      if (len > 0) {
-        incomingPacket[len] = 0;
+      // only toggle the LED if the new button state is HIGH
+      if (buttonState == HIGH) {
+        setToRandomColor();
+        lastTimeStepped = time(nullptr);
+        Serial.println(lastTimeStepped);
+        Udp.beginPacket(otherESPIP, 4210);
+        Udp.write("Hi :)");
+        Udp.endPacket();
       }
-      //------ Read content of package
-      Serial.printf("received %s\n", incomingPacket);
-       winnerLights();
-     }
-}
+    }
+  }
 
-void loop1() {
-  // read the state of the pushbutton value:
-  buttonState = digitalRead(BUTTON_PIN);
-  
-  if (buttonState == LOW) {
-  setToRandomColor();
-  lastTimeStepped = time(nullptr);
-  Serial.println(lastTimeStepped);
-  Udp.beginPacket("10.5.10.36", 4210);
-  Udp.write("41588765187");
-  Udp.endPacket();
+  // save the reading. Next time through the loop, it'll be the lastButtonState:
+  lastButtonState = reading;
+
+  //-----------------------------RECEIVE PACKAGES
+  int packetSize = Udp.parsePacket();
+  if (packetSize) {
+    // receive incoming UDP packets
+    Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+    int len = Udp.read(incomingPacket, 255);
+    if (len > 0) {
+      incomingPacket[len] = 0;
+    }
+    //------ Read content of package
+    Serial.printf("received %s\n", incomingPacket);
+    winnerLights();
   }
 }
 
-void loop2() {
+void loopMINIMAL() {
+  // read the state of the pushbutton value:
+  buttonState = digitalRead(BUTTON_PIN);
+
+  if (buttonState == LOW) {
+    setToRandomColor();
+    lastTimeStepped = time(nullptr);
+    Serial.println(lastTimeStepped);
+    Udp.beginPacket("10.5.10.36", 4210);
+    Udp.write("41588765187");
+    Udp.endPacket();
+  }
+}
+
+void loopORIGINAL() {
   rotateColors();
 
   // read the state of the pushbutton value:
