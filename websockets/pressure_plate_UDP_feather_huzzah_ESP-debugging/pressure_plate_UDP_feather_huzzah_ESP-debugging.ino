@@ -129,44 +129,22 @@ void receivePackage() {
     }
     //------ Read content of package
     Serial.printf("received %s\n", incomingPacket);
-    decodeColorAndTimestampPackageMINIMAL();
+    if (len == 1) {
+      decodeBooleanPackage();
+    }
+    else {
+      decodeColorAndTimestampPackage();
+    }
   }
 }
 
-void decodeColorAndTimestampPackageMINIMAL() {
-  //------ Split into color and timestamp
-  //[0]        color
-  //[1]-[10]   timestamp
-  char receivedColorString = incomingPacket[0];
-  int receivedColor = receivedColorString - 48;
-  Serial.printf("received color %d\n", receivedColor);
-  
-  char receivedTimestampString [10];
-  for (int j = 1; j <= 10; j++) {
-    receivedTimestampString[j - 1] = incomingPacket[j];
-  }  
-  char *bufferString;
-  time_t receivedTimestamp = strtoul(receivedTimestampString, &bufferString, 10);
-  Serial.printf("received timestamp %ld\n", receivedTimestamp);
-  
-//  //------ Check color
-//  Serial.printf("comparing colors %d and %d\n", receivedColor, currentColor);
-//  if (receivedColor == currentColor) {
-//    //------ Check timestamp
-//    //todo check timestamp
-//    Serial.printf("comparing timestamps %ld and %ld\n", lastTimeStepped, receivedTimestamp);
-//    if (difftime(lastTimeStepped, receivedTimestamp) > 0) {
-//      sendOtherPlateItLost();
-//      winnerLights();
-//    } else {
-//      sendOtherPlateItWon();
-//      looserLights();
-//    }
-//  }
-//  else {
-//    sendOtherPlateItLost();
-//    winnerLights();
-//  }
+void decodeBooleanPackage() {
+  if ((strcmp(incomingPacket, "1") == 0)) {
+    winnerLights();
+  }
+  else if ((strcmp(incomingPacket, "0") == 0)) {
+    looserLights();
+  }
 }
 
 void decodeColorAndTimestampPackage() {
@@ -184,16 +162,14 @@ void decodeColorAndTimestampPackage() {
   char *bufferString;
   time_t receivedTimestamp = strtoul(receivedTimestampString, &bufferString, 10);
   Serial.printf("received timestamp %ld\n", receivedTimestamp);
+
   //------ Check color
-  Serial.printf("comparing colors %d and %d\n", receivedColor, currentColor);
   if (receivedColor == currentColor) {
-    //------ Check timestamp
-    //todo check timestamp
-    Serial.printf("comparing timestamps %ld and %ld\n", lastTimeStepped, receivedTimestamp);
-    if (difftime(lastTimeStepped, receivedTimestamp) > 0) {
+    if (checkIfMyTimestampIsEarlier(receivedTimestamp)) {
       sendOtherPlateItLost();
       winnerLights();
-    } else {
+    }
+    else {
       sendOtherPlateItWon();
       looserLights();
     }
@@ -202,6 +178,15 @@ void decodeColorAndTimestampPackage() {
     sendOtherPlateItLost();
     winnerLights();
   }
+}
+
+
+bool checkIfMyTimestampIsEarlier(time_t receivedTimestamp) {
+  Serial.printf("comparing timestamps %ld and %ld\n", lastTimeStepped, receivedTimestamp);
+  double diffedTime = difftime(lastTimeStepped, receivedTimestamp);
+  Serial.println("Diffed time is ");
+  Serial.println(diffedTime);
+  return diffedTime > 0;
 }
 
 void sendOtherPlateItWon() {
@@ -282,7 +267,7 @@ void winnerLights() {
 void looserLights() {
   strip.fill(red, 0, strip.numPixels() - 1);
   strip.show();
-  //delay(10);
+  delay(10);
   for (int i = 255; i >= 0; i--) {
     strip.fill( strip.Color(i, 0, 0), 0, strip.numPixels() - 1);
     strip.show();
@@ -294,8 +279,8 @@ void looserLights() {
 }
 
 /*--------------------
-ORIGINAL LOOP----------------------------
-----------------------*/
+  ORIGINAL LOOP----------------------------
+  ----------------------*/
 void loopORIGINAL() {
   rotateColors();
 
