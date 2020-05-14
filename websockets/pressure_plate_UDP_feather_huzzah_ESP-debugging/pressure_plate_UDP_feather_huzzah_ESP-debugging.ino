@@ -73,7 +73,7 @@ void setup() {
 
 int lastButtonState = 0;
 int lastDebounceTime = 0;
-int debounceDelay = 50;
+int debounceDelay = 20;
 
 void loop() {
   rotateColors();
@@ -233,7 +233,7 @@ void sendTimestampAndColorToOtherPlate(time_t timestamp) {
      Rotate all the colors every x seconds.
      Using millis(), this won' stop the program
 */
-int waitTime = 30000; //10 seconds
+int waitTime = 10000; //10 seconds
 unsigned long timeNow = 0;
 void rotateColors() {
   if ((unsigned long)(millis() - timeNow) > waitTime) {
