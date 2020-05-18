@@ -7,11 +7,11 @@ This prototype consists of two plates lying on the floor, that communicate with 
 The plates were refined over 3 iterations and consist of multiple metal parts that get assembled like shown in the following graphic:
 <img src="/img/pressure_plate_assembling-09-09.png" width="400" alt="plate prototype assembling">
 
-Two different ESP8266 got used for the prototypes (solely on the basis of availability).
-- [Waveshare e-Paper ESP8266 Driver Board](https://www.waveshare.com/e-paper-esp8266-driver-board.htm)
+~~Two different ESP8266 got used for the prototypes (solely on the basis of availability).
+- [Waveshare e-Paper ESP8266 Driver Board](https://www.waveshare.com/e-paper-esp8266-driver-board.htm)~~
 - [Adafruit Feather HUZZAH with ESP8266](https://www.adafruit.com/product/3046)
 
-The ESPs communicate over UDP. The finalized and used code can be found [here](/websockets/pressure_plate_UDP_e_ink_ESP) and [here](/websockets/pressure_plate_UDP_feather_huzzah_ESP).
+The ESPs communicate over UDP. The finalized and used code can be found ~~[here](/websockets/pressure_plate_UDP_e_ink_ESP) and~~ [here](/websockets/pressure_plate_UDP_feather_huzzah_ESP).
 
 The game works in such a way that the plates rotate through different, random colours. If the plates show the same colour, the players have to press their plate. The player who presses first wins.
 
