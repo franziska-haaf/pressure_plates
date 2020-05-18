@@ -15,10 +15,10 @@
 
 #define   BUTTON_PIN    4
 #define   LED_STRIP     5
-#define   NUMPIXELS     49   
+#define   NUMPIXELS     49
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
-int buttonState = 0;         // variable for reading the pushbutton status
+int buttonState = 0;         // variable for buttonReading the pushbutton status
 
 uint32_t black = strip.Color(0, 0, 0);
 
@@ -42,17 +42,17 @@ time_t lastTimeStepped;
 
 #include "wifiAccessData.h"
 
-//const char* usedIP = laptopIP; 
-const char* usedIP = otherESPIP; 
+//const char* usedIP = laptopIP;
+const char* usedIP = otherESPIP;
 
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
 
   strip.begin();
   strip.show();
-  strip.setBrightness(100); //150 Set BRIGHTNESS to about 1/5 (max = 255)
+  strip.setBrightness(50); //150 Set BRIGHTNESS to about 1/5 (max = 255)
   setToRandomColor();
-  pinMode(BUTTON_PIN, INPUT_PULLUP); 
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   Serial.println();
 
@@ -71,23 +71,53 @@ void setup() {
   configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 }
 
+int lastButtonState = 0;
+int lastDebounceTime = 0;
+int debounceDelay = 20;
+
 void loop() {
   rotateColors();
 
-  // read the state of the pushbutton value:
-  buttonState = digitalRead(BUTTON_PIN);
-  //-----------------------------GOT STEPPED ON: SEND PACKAGE
-  if (buttonState == LOW) {
-    Serial.println("Got stepped on");
-    //------Save Timestamp
+  // read the state of the button into a local variable:
+  int buttonReading = digitalRead(BUTTON_PIN);
+
+  // check to see if you just pressed the button
+  // (i.e. the input went from LOW to HIGH), and you've waited long enough
+  // since the last press to ignore any noise:
+
+  // If the switch changed, due to noise or pressing:
+  if (buttonReading != lastButtonState) {
+    // reset the debouncing timer
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    // whatever the buttonReading is at, it's been there for longer than the debounce
+    // delay, so take it as the actual current state:
+
+    // if the button state has changed:
+    if (buttonReading != buttonState) {
+      buttonState = buttonReading;
+      plateGotActivated();
+    }
+  }
+
+  // save the buttonReading. Next time through the loop, it'll be the lastButtonState:
+  lastButtonState = buttonReading;
+
+  receivePackage();
+}
+
+void plateGotActivated() {
+  if (buttonState == HIGH) {
     lastTimeStepped = time(nullptr);
     Serial.println(lastTimeStepped);
-    //------ Tell other plate
-    sendTimestampAndColorToOtherPlate(lastTimeStepped); //give timestamp + color! check if the got the same color!!!
-  }
-  //delay(1000);
 
-  //-----------------------------RECEIVE PACKAGES
+    sendTimestampAndColorToOtherPlate(lastTimeStepped); 
+  }
+}
+
+void receivePackage() {
   int packetSize = Udp.parsePacket();
   if (packetSize) {
     // receive incoming UDP packets
@@ -98,49 +128,64 @@ void loop() {
     }
     //------ Read content of package
     Serial.printf("received %s\n", incomingPacket);
-    //A: we got a boolean char telling us if we won or not (we got pressed, and send color+timestamp to the other plate to check )
-    if ((strcmp(incomingPacket, "1") == 0)) {
-      winnerLights();
+    if (len == 1) {
+      decodeBooleanPackage();
     }
-    else if ((strcmp(incomingPacket, "0") == 0)) {
-      looserLights();
-    }
-    //B: we got a color + timestamp (the other plate got pressed, and send a timestamp for us to check)
     else {
-      //------ Split into color and timestamp
-      //[0]        color
-      //[1]-[10]   timestamp
-      char receivedColorString = incomingPacket[0];
-      int receivedColor = receivedColorString - 48;
-      Serial.printf("received color %d\n", receivedColor);
-
-      char receivedTimestampString [10];
-      for (int j = 1; j <= 10; j++) {
-        receivedTimestampString[j - 1] = incomingPacket[j];
-      }
-      char *bufferString;
-      time_t receivedTimestamp = strtoul(receivedTimestampString, &bufferString, 10);
-      Serial.printf("received timestamp %ld\n", receivedTimestamp);
-      //------ Check color
-      Serial.printf("comparing colors %d and %d\n", receivedColor, currentColor);
-      if (receivedColor == currentColor) {
-        //------ Check timestamp
-        //todo check timestamp
-        Serial.printf("comparing timestamps %ld and %ld\n", lastTimeStepped, receivedTimestamp);
-        if (difftime(lastTimeStepped, receivedTimestamp) > 0) {
-          sendOtherPlateItLost();
-          winnerLights();
-        } else {
-          sendOtherPlateItWon();
-          looserLights();
-        }
-      }
-      else {
-        sendOtherPlateItLost();
-        winnerLights();
-      }
+      decodeColorAndTimestampPackage();
     }
   }
+}
+
+void decodeBooleanPackage() {
+  if ((strcmp(incomingPacket, "1") == 0)) {
+    winnerLights();
+  }
+  else if ((strcmp(incomingPacket, "0") == 0)) {
+    looserLights();
+  }
+}
+
+void decodeColorAndTimestampPackage() {
+  //------ Split into color and timestamp
+  //[0]        color
+  //[1]-[10]   timestamp
+  char receivedColorString = incomingPacket[0];
+  int receivedColor = receivedColorString - 48;
+  Serial.printf("received color %d\n", receivedColor);
+
+  char receivedTimestampString [10];
+  for (int j = 1; j <= 10; j++) {
+    receivedTimestampString[j - 1] = incomingPacket[j];
+  }
+  char *bufferString;
+  time_t receivedTimestamp = strtoul(receivedTimestampString, &bufferString, 10);
+  Serial.printf("received timestamp %ld\n", receivedTimestamp);
+
+  //------ Check color
+  if (receivedColor == currentColor) {
+    if (checkIfMyTimestampIsEarlier(receivedTimestamp)) {
+      sendOtherPlateItLost();
+      winnerLights();
+    }
+    else {
+      sendOtherPlateItWon();
+      looserLights();
+    }
+  }
+  else {
+    sendOtherPlateItLost();
+    winnerLights();
+  }
+}
+
+
+bool checkIfMyTimestampIsEarlier(time_t receivedTimestamp) {
+  Serial.printf("comparing timestamps %ld and %ld\n", lastTimeStepped, receivedTimestamp);
+  double diffedTime = difftime(lastTimeStepped, receivedTimestamp);
+  Serial.println("Diffed time is ");
+  Serial.println(diffedTime);
+  return diffedTime > 0;
 }
 
 void sendOtherPlateItWon() {
@@ -227,7 +272,6 @@ void looserLights() {
     strip.show();
     delay(5);
   }
-  //delay(500);
   strip.fill( colors[currentColor], 0, strip.numPixels() - 1);
   strip.show();
 }
