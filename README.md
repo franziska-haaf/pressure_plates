@@ -17,3 +17,8 @@ The game works in such a way that the plates rotate through different, random co
 
 # User tests
 The prototype should be testet in real meetup situations. It was planned to carry out the user tests in mid/end March 2020. Due to the global corona crisis in 2020, no Meetups could be held. The user tests will be conducted as soon as local Meetups can be held again. If the situation does not improve in the near future, user tests may not be conducted for the time being.
+
+# Iteration
+After conducting user tests with colleagues in my company, some changes were made:
+- Adding icons for better understanding
+- Adding LEDs to count how often each user has won (resetting to zero when they reached 5)
