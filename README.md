@@ -7,13 +7,18 @@ This prototype consists of two plates lying on the floor, that communicate with 
 The plates were refined over 3 iterations and consist of multiple metal parts that get assembled like shown in the following graphic:
 <img src="/img/pressure_plate_assembling-09-09.png" width="400" alt="plate prototype assembling">
 
-Two different ESP8266 got used for the prototypes (solely on the basis of availability).
-- [Waveshare e-Paper ESP8266 Driver Board](https://www.waveshare.com/e-paper-esp8266-driver-board.htm)
+~~Two different ESP8266 got used for the prototypes (solely on the basis of availability).~~
+- ~~[Waveshare e-Paper ESP8266 Driver Board](https://www.waveshare.com/e-paper-esp8266-driver-board.htm)~~
 - [Adafruit Feather HUZZAH with ESP8266](https://www.adafruit.com/product/3046)
 
-The ESPs communicate over UDP. The finalized and used code can be found [here](/websockets/pressure_plate_UDP_e_ink_ESP) and [here](/websockets/pressure_plate_UDP_feather_huzzah_ESP).
+The ESPs communicate over UDP. The finalized and used code can be found ~~[here](/websockets/pressure_plate_UDP_e_ink_ESP) and~~ [here](/websockets/pressure_plate_UDP_feather_huzzah_ESP).
 
 The game works in such a way that the plates rotate through different, random colours. If the plates show the same colour, the players have to press their plate. The player who presses first wins.
 
 # User tests
 The prototype should be testet in real meetup situations. It was planned to carry out the user tests in mid/end March 2020. Due to the global corona crisis in 2020, no Meetups could be held. The user tests will be conducted as soon as local Meetups can be held again. If the situation does not improve in the near future, user tests may not be conducted for the time being.
+
+# Iteration
+After conducting user tests with colleagues in my company, some changes were made:
+- Adding icons for better understanding
+- Adding LEDs to count how often each user has won (resetting to zero when they reached 5)
