@@ -141,13 +141,7 @@ void resetWinningCounter() {
 }
 
 void lighCounterLEDs() {
-  int counterStartLED = NUMPIXELS - 1;
-  int counterEndLED = NUMPIXELS - 1 + winningCounter - 1;
-  //We have 52 LEDs in total. The first 47 are for the ambient light, 48-52 are for the counter
   if (winningCounter > 0) {
-//    for (int i = counterStartLED; i <= counterEndLED ; i++) {
-//      strip.setPixelColor(i, 255, 255, 255);
-//    }
     strip.fill(white, NUMPIXELS-1, winningCounter);
     strip.show();
   }
