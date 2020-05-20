@@ -13,14 +13,16 @@
 
 #define SERIAL_BAUD_NUM   115200
 
-#define   BUTTON_PIN    4
-#define   LED_STRIP     5
-#define   NUMPIXELS     49
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, LED_STRIP, NEO_GRB + NEO_KHZ800);
+#define   BUTTON_PIN          4
+#define   LED_STRIP           5
+#define   NUMPIXELS           48
+#define   NUMPIXELS_COUNTER   5
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS + NUMPIXELS_COUNTER, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
 int buttonState = 0;         // variable for buttonReading the pushbutton status
 
 uint32_t black = strip.Color(0, 0, 0);
+uint32_t white = strip.Color(255, 255, 255);
 
 uint32_t pink = strip.Color(255, 0, 234);           // 0
 uint32_t orange = strip.Color(255, 162, 0);         // 1
@@ -42,7 +44,6 @@ time_t lastTimeStepped;
 
 #include "wifiAccessData.h"
 
-//const char* usedIP = laptopIP;
 const char* usedIP = otherESPIP;
 
 void setup() {
@@ -77,6 +78,7 @@ int debounceDelay = 20;
 
 void loop() {
   rotateColors();
+  lighCounterLEDs();
 
   // read the state of the button into a local variable:
   int buttonReading = digitalRead(BUTTON_PIN);
@@ -108,12 +110,55 @@ void loop() {
   receivePackage();
 }
 
+/**
+   Add a win to the counter
+
+   Check if the counter reached a 5.
+   If yes
+   - notify the other plate
+   - play the winning sequence
+   - reset to 0
+
+   If no
+   - add a number to the counter
+*/
+int winningCounter = 0;
+int winningCounterMax = 5;
+void handleWinningCounter() {
+  if (winningCounter == winningCounterMax) {
+    lighCounterLEDs();
+    winnerLights();
+    sendOtherPlateGameOver();
+    resetWinningCounter();
+  }
+  Serial.println("handleWinningCounter - currently: " + winningCounter);
+}
+
+void resetWinningCounter() {
+  winningCounter = 0;
+  strip.fill(black, NUMPIXELS-1, NUMPIXELS_COUNTER);
+  strip.show();
+}
+
+void lighCounterLEDs() {
+  int counterStartLED = NUMPIXELS - 1;
+  int counterEndLED = NUMPIXELS - 1 + winningCounter - 1;
+  //We have 52 LEDs in total. The first 47 are for the ambient light, 48-52 are for the counter
+  if (winningCounter > 0) {
+//    for (int i = counterStartLED; i <= counterEndLED ; i++) {
+//      strip.setPixelColor(i, 255, 255, 255);
+//    }
+    strip.fill(white, NUMPIXELS-1, winningCounter);
+    strip.show();
+  }
+}
+
 void plateGotActivated() {
   if (buttonState == HIGH) {
     lastTimeStepped = time(nullptr);
     Serial.println(lastTimeStepped);
 
-    sendTimestampAndColorToOtherPlate(lastTimeStepped); 
+    sendTimestampAndColorToOtherPlate(lastTimeStepped);
   }
 }
 
@@ -131,6 +176,13 @@ void receivePackage() {
     if (len == 1) {
       decodeBooleanPackage();
     }
+    else if (incomingPacket == "gameover") {
+      resetWinningCounter();
+      looserLights();
+    }
+    else if (incomingPacket == "reset") {
+      resetWinningCounter();
+    }
     else {
       decodeColorAndTimestampPackage();
     }
@@ -139,10 +191,13 @@ void receivePackage() {
 
 void decodeBooleanPackage() {
   if ((strcmp(incomingPacket, "1") == 0)) {
-    winnerLights();
+    +
+    winningCounter++;
+    handleWinningCounter();
   }
   else if ((strcmp(incomingPacket, "0") == 0)) {
-    looserLights();
+    winningCounter--;
+    handleWinningCounter();
   }
 }
 
@@ -166,19 +221,21 @@ void decodeColorAndTimestampPackage() {
   if (receivedColor == currentColor) {
     if (checkIfMyTimestampIsEarlier(receivedTimestamp)) {
       sendOtherPlateItLost();
-      winnerLights();
+      winningCounter++;
+      handleWinningCounter();
     }
     else {
       sendOtherPlateItWon();
-      looserLights();
+      winningCounter--;
+      handleWinningCounter();
     }
   }
   else {
     sendOtherPlateItLost();
-    winnerLights();
+    winningCounter++;
+    handleWinningCounter();
   }
 }
-
 
 bool checkIfMyTimestampIsEarlier(time_t receivedTimestamp) {
   Serial.printf("comparing timestamps %ld and %ld\n", lastTimeStepped, receivedTimestamp);
@@ -197,6 +254,12 @@ void sendOtherPlateItWon() {
 void sendOtherPlateItLost() {
   Udp.beginPacket(usedIP, localUdpPort);
   Udp.write("0");
+  Udp.endPacket();
+}
+
+void sendOtherPlateGameOver() {
+  Udp.beginPacket(usedIP, localUdpPort);
+  Udp.write("gameover");
   Udp.endPacket();
 }
 
@@ -233,7 +296,7 @@ void sendTimestampAndColorToOtherPlate(time_t timestamp) {
      Rotate all the colors every x seconds.
      Using millis(), this won' stop the program
 */
-int waitTime = 10000; //10 seconds
+int waitTime = 5000; //5 seconds
 unsigned long timeNow = 0;
 void rotateColors() {
   if ((unsigned long)(millis() - timeNow) > waitTime) {
@@ -242,36 +305,45 @@ void rotateColors() {
   }
 }
 
+int resetTime = 30000; //30 seconds
+void sendOtherPlateReset() {
+  if ((unsigned long)(millis() - lastTimeStepped) > resetTime) {
+    Udp.beginPacket(usedIP, localUdpPort);
+    Udp.write("reset");
+    Udp.endPacket();
+  }
+  resetWinningCounter();
+}
+
 void setToRandomColor() {
   int randNumber = random(0, amountOfColors);
-  strip.fill( colors[randNumber], 0, strip.numPixels() - 1);
+  strip.fill( colors[randNumber], 0, NUMPIXELS - 1);
   currentColor = randNumber;
   Serial.printf("set current color %d\n", currentColor);
   strip.show();
 }
 
-
 void winnerLights() {
   for (int rounds = 5; rounds >= 0; rounds--) {
     for (int i = 0; i <= amountOfColors; i++) {
-      strip.fill( colors[i], 0, strip.numPixels() - 1);
+      strip.fill( colors[i], 0, NUMPIXELS - 1);
       strip.show();
       delay(50);
     }
   }
-  strip.fill( colors[currentColor], 0, strip.numPixels() - 1);
+  strip.fill( colors[currentColor], 0, NUMPIXELS - 1);
   strip.show();
 }
 
 void looserLights() {
-  strip.fill(red, 0, strip.numPixels() - 1);
+  strip.fill(red, 0, NUMPIXELS - 1);
   strip.show();
   delay(10);
   for (int i = 255; i >= 0; i--) {
-    strip.fill( strip.Color(i, 0, 0), 0, strip.numPixels() - 1);
+    strip.fill( strip.Color(i, 0, 0), 0, NUMPIXELS - 1);
     strip.show();
     delay(5);
   }
-  strip.fill( colors[currentColor], 0, strip.numPixels() - 1);
+  strip.fill( colors[currentColor], 0, NUMPIXELS - 1);
   strip.show();
 }
