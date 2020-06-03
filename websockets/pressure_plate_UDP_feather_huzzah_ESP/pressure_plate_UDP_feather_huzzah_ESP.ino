@@ -15,7 +15,7 @@
 
 #define   BUTTON_PIN          4
 #define   LED_STRIP           5
-#define   NUMPIXELS           47 // 48 for plate 01, 47 for plate 02
+#define   NUMPIXELS           48 // 48 for plate 01, 47 for plate 02
 #define   NUMPIXELS_COUNTER   5
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS + NUMPIXELS_COUNTER, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
@@ -78,7 +78,7 @@ void setup() {
 
 void loop() {
   rotateColors();
-  lighCounterLEDs();
+  updateCounterLEDs();
 
   //Button reading with debounce mechanism
   int buttonReading = digitalRead(BUTTON_PIN);
@@ -143,15 +143,15 @@ void receivePackage() {
 */
 int winningCounter = 0;
 int winningCounterMax = 5;
-void handleWinningCounter() {
+void checkIfCounterReachedMax() {
+  Serial.print("counter: ");
+  Serial.println(winningCounter);
   if (winningCounter == winningCounterMax) {
-    lighCounterLEDs();
+    updateCounterLEDs();
     winnerLights();
     sendOtherPlateGameOver();
     resetWinningCounter();
   }
-  Serial.print("counter: " + winningCounter);
-  Serial.println(winningCounter);
 }
 
 void resetWinningCounter() {
@@ -160,11 +160,9 @@ void resetWinningCounter() {
   strip.show();
 }
 
-void lighCounterLEDs() {
-  if (winningCounter > 0) {
-    strip.fill(white, NUMPIXELS - 1, winningCounter);
-    strip.show();
-  }
+void updateCounterLEDs() {
+  strip.fill(white, NUMPIXELS - 1, winningCounter);
+  strip.show();
 }
 
 void plateGotActivated() {
@@ -179,13 +177,13 @@ void plateGotActivated() {
 void decodeBooleanPackage() {
   if ((strcmp(incomingPacket, "1") == 0)) {
     winningCounter++;
-    handleWinningCounter();
+    checkIfCounterReachedMax();
   }
   else if ((strcmp(incomingPacket, "0") == 0)) {
     if (winningCounter > 0) {
       decreaseWinningCounter();
     }
-    handleWinningCounter();
+    checkIfCounterReachedMax();
   }
 }
 
@@ -216,18 +214,18 @@ void decodeColorAndTimestampPackage() {
     if (checkIfMyTimestampIsEarlier(receivedTimestamp)) {
       sendOtherPlateItLost();
       winningCounter++;
-      handleWinningCounter();
+      checkIfCounterReachedMax();
     }
     else {
       sendOtherPlateItWon();
       decreaseWinningCounter();
-      handleWinningCounter();
+      checkIfCounterReachedMax();
     }
   }
   else {
     sendOtherPlateItLost();
     winningCounter++;
-    handleWinningCounter();
+    checkIfCounterReachedMax();
   }
 }
 
