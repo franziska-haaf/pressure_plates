@@ -70,7 +70,7 @@ void setup() {
   Udp.begin(localUdpPort);
   Serial.printf("Now listening at IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), localUdpPort);
   Serial.print("chipId: ");
-  Serial.println(ESP.getChipId()); 
+  Serial.println(ESP.getChipId());
 
   // Initialize Time
   configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
@@ -91,7 +91,7 @@ void loop() {
       buttonState = buttonReading;
       plateGotActivated();
     }
-  } 
+  }
   lastButtonState = buttonReading; // save the buttonReading
 
   receivePackage();
@@ -111,9 +111,9 @@ void receivePackage() {
     if ((strcmp(incomingPacket, "0") == 0)) {
       decodeBooleanPackage();
     }
-    else if((strcmp(incomingPacket, "1") == 0)){
+    else if ((strcmp(incomingPacket, "1") == 0)) {
       decodeBooleanPackage();
-      }
+    }
     else if ((strcmp(incomingPacket, "3") == 0)) { //game over flag = 3
       Serial.printf("game over");
       resetWinningCounter();
@@ -156,13 +156,13 @@ void handleWinningCounter() {
 
 void resetWinningCounter() {
   winningCounter = 0;
-  strip.fill(black, NUMPIXELS-1, NUMPIXELS_COUNTER);
+  strip.fill(black, NUMPIXELS - 1, NUMPIXELS_COUNTER);
   strip.show();
 }
 
 void lighCounterLEDs() {
   if (winningCounter > 0) {
-    strip.fill(white, NUMPIXELS-1, winningCounter);
+    strip.fill(white, NUMPIXELS - 1, winningCounter);
     strip.show();
   }
 }
@@ -182,8 +182,16 @@ void decodeBooleanPackage() {
     handleWinningCounter();
   }
   else if ((strcmp(incomingPacket, "0") == 0)) {
-    winningCounter--;
+    if (winningCounter > 0) {
+      decreaseWinningCounter();
+    }
     handleWinningCounter();
+  }
+}
+
+void decreaseWinningCounter() {
+  if (winningCounter > 0) {
+    decreaseWinningCounter();
   }
 }
 
@@ -212,7 +220,7 @@ void decodeColorAndTimestampPackage() {
     }
     else {
       sendOtherPlateItWon();
-      winningCounter--;
+      decreaseWinningCounter();
       handleWinningCounter();
     }
   }
