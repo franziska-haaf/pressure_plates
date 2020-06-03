@@ -35,16 +35,18 @@ uint32_t colors [4] = {pink, green, blue, yellow};
 const int amountOfColors = 4;
 int currentColor = 0; //can be: 0 - 4
 
-
 WiFiUDP Udp;
 unsigned int localUdpPort = 4210;  // local port to listen on
 char incomingPacket[255];  // buffer for incoming packets
 
+#include "wifiAccessData.h"
+const char* usedIP = otherESPIP;
+
 time_t lastTimeStepped;
 
-#include "wifiAccessData.h"
-
-const char* usedIP = otherESPIP;
+int lastButtonState = 0;
+int lastDebounceTime = 0;
+int debounceDelay = 20;
 
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
@@ -74,40 +76,23 @@ void setup() {
   configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 }
 
-int lastButtonState = 0;
-int lastDebounceTime = 0;
-int debounceDelay = 20;
-
 void loop() {
   rotateColors();
   lighCounterLEDs();
 
-  // read the state of the button into a local variable:
+  //Button reading with debounce mechanism
   int buttonReading = digitalRead(BUTTON_PIN);
-
-  // check to see if you just pressed the button
-  // (i.e. the input went from LOW to HIGH), and you've waited long enough
-  // since the last press to ignore any noise:
-
-  // If the switch changed, due to noise or pressing:
   if (buttonReading != lastButtonState) {
-    // reset the debouncing timer
-    lastDebounceTime = millis();
+    lastDebounceTime = millis();// reset the debouncing timer
   }
 
   if ((millis() - lastDebounceTime) > debounceDelay) {
-    // whatever the buttonReading is at, it's been there for longer than the debounce
-    // delay, so take it as the actual current state:
-
-    // if the button state has changed:
-    if (buttonReading != buttonState) {
+    if (buttonReading != buttonState) { // if the button state has changed:
       buttonState = buttonReading;
       plateGotActivated();
     }
-  }
-
-  // save the buttonReading. Next time through the loop, it'll be the lastButtonState:
-  lastButtonState = buttonReading;
+  } 
+  lastButtonState = buttonReading; // save the buttonReading
 
   receivePackage();
 }
@@ -314,7 +299,6 @@ void setToRandomColor() {
   int randNumber = random(0, amountOfColors);
   strip.fill( colors[randNumber], 0, NUMPIXELS - 1);
   currentColor = randNumber;
-  Serial.printf("set current color %d\n", currentColor);
   strip.show();
 }
 
