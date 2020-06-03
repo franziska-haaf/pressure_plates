@@ -67,6 +67,8 @@ void setup() {
 
   Udp.begin(localUdpPort);
   Serial.printf("Now listening at IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), localUdpPort);
+  Serial.print("chipId: ");
+  Serial.println(ESP.getChipId()); 
 
   // Initialize Time
   configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
