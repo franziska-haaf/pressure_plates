@@ -103,7 +103,6 @@ void receivePackage() {
   int packetSize = Udp.parsePacket();
   if (packetSize) {
     // receive incoming UDP packets
-    Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
     int len = Udp.read(incomingPacket, 255);
     if (len > 0) {
       incomingPacket[len] = 0;
@@ -166,12 +165,6 @@ void updateCounterLEDs() {
   int startLED = NUMPIXELS - 1;
   int endLED = startLED + NUMPIXELS_COUNTER - 1;
   int midLED = startLED + winningCounter;
-  Serial.print("start ");
-  Serial.println(startLED);
-  Serial.print("mid ");
-  Serial.println(midLED);
-  Serial.print("end ");
-  Serial.println(endLED);
 
   //Set white LEDs
   if (midLED > startLED) {
