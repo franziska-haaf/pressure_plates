@@ -15,7 +15,7 @@
 
 #define   BUTTON_PIN          4
 #define   LED_STRIP           5
-#define   NUMPIXELS           48 // 48 for plate 01, 47 for plate 02
+#define   NUMPIXELS           47 // 48 for plate 01, 47 for plate 02
 #define   NUMPIXELS_COUNTER   5
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS + NUMPIXELS_COUNTER, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
@@ -48,6 +48,9 @@ int lastButtonState = 0;
 int lastDebounceTime = 0;
 int debounceDelay = 20;
 
+int winningCounter = 0;
+int winningCounterMax = 5;
+
 void setup() {
   Serial.begin(SERIAL_BAUD_NUM);
 
@@ -78,7 +81,6 @@ void setup() {
 
 void loop() {
   rotateColors();
-  updateCounterLEDs();
 
   //Button reading with debounce mechanism
   int buttonReading = digitalRead(BUTTON_PIN);
@@ -129,23 +131,12 @@ void receivePackage() {
   }
 }
 
-/**
-   Add a win to the counter
+void increaseWinningCounter() {
+  winningCounter++;
 
-   Check if the counter reached a 5.
-   If yes
-   - notify the other plate
-   - play the winning sequence
-   - reset to 0
-
-   If no
-   - add a number to the counter
-*/
-int winningCounter = 0;
-int winningCounterMax = 5;
-void checkIfCounterReachedMax() {
   Serial.print("counter: ");
   Serial.println(winningCounter);
+
   if (winningCounter == winningCounterMax) {
     updateCounterLEDs();
     winnerLights();
@@ -160,9 +151,21 @@ void resetWinningCounter() {
   strip.show();
 }
 
+void decreaseWinningCounter() {
+  Serial.print("counter: ");
+  Serial.println(winningCounter);
+
+  if (winningCounter > 0) {
+    winningCounter--;
+  }
+  updateCounterLEDs();
+}
+
 void updateCounterLEDs() {
-  strip.fill(white, NUMPIXELS - 1, winningCounter);
-  strip.show();
+  if (winningCounter > 0) {
+    strip.fill(white, NUMPIXELS - 1, winningCounter);
+    strip.show();
+  }
 }
 
 void plateGotActivated() {
@@ -176,19 +179,9 @@ void plateGotActivated() {
 
 void decodeBooleanPackage() {
   if ((strcmp(incomingPacket, "1") == 0)) {
-    winningCounter++;
-    checkIfCounterReachedMax();
+    increaseWinningCounter();
   }
   else if ((strcmp(incomingPacket, "0") == 0)) {
-    if (winningCounter > 0) {
-      decreaseWinningCounter();
-    }
-    checkIfCounterReachedMax();
-  }
-}
-
-void decreaseWinningCounter() {
-  if (winningCounter > 0) {
     decreaseWinningCounter();
   }
 }
@@ -209,23 +202,21 @@ void decodeColorAndTimestampPackage() {
   time_t receivedTimestamp = strtoul(receivedTimestampString, &bufferString, 10);
   Serial.printf("received timestamp %ld\n", receivedTimestamp);
 
-  //------ Check color
+  //------ Same color
   if (receivedColor == currentColor) {
     if (checkIfMyTimestampIsEarlier(receivedTimestamp)) {
       sendOtherPlateItLost();
-      winningCounter++;
-      checkIfCounterReachedMax();
+      increaseWinningCounter();
     }
     else {
       sendOtherPlateItWon();
       decreaseWinningCounter();
-      checkIfCounterReachedMax();
     }
   }
+  //------ Different color
   else {
     sendOtherPlateItLost();
-    winningCounter++;
-    checkIfCounterReachedMax();
+    increaseWinningCounter();
   }
 }
 
