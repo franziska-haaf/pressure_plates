@@ -133,7 +133,8 @@ void receivePackage() {
 
 void increaseWinningCounter() {
   winningCounter++;
-
+  updateCounterLEDs();
+  
   Serial.print("counter: ");
   Serial.println(winningCounter);
 
@@ -162,10 +163,27 @@ void decreaseWinningCounter() {
 }
 
 void updateCounterLEDs() {
-  if (winningCounter > 0) {
-    strip.fill(white, NUMPIXELS - 1, winningCounter);
-    strip.show();
+  int startLED = NUMPIXELS - 1;
+  int endLED = startLED + NUMPIXELS_COUNTER - 1;
+  int midLED = startLED + winningCounter;
+  Serial.print("start ");
+  Serial.println(startLED);
+  Serial.print("mid ");
+  Serial.println(midLED);
+  Serial.print("end ");
+  Serial.println(endLED);
+
+  //Set white LEDs
+  if (midLED > startLED) {
+    for (int i = startLED; i < midLED; i++) {
+    strip.setPixelColor(i, white);
+    }
   }
+  //Set black LEDs
+  for (int j = midLED; j <= endLED; j++) {
+    strip.setPixelColor(j, black);
+  }
+  strip.show();
 }
 
 void plateGotActivated() {
