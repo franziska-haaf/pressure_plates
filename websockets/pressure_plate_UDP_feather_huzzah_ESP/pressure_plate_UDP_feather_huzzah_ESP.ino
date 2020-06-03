@@ -187,7 +187,6 @@ void receivePackage() {
 
 void decodeBooleanPackage() {
   if ((strcmp(incomingPacket, "1") == 0)) {
-    +
     winningCounter++;
     handleWinningCounter();
   }
