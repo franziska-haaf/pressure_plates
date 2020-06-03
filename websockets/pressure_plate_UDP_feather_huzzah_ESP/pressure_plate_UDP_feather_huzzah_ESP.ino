@@ -15,7 +15,7 @@
 
 #define   BUTTON_PIN          4
 #define   LED_STRIP           5
-#define   NUMPIXELS           48
+#define   NUMPIXELS           47 // 48 for plate 01, 47 for plate 02
 #define   NUMPIXELS_COUNTER   5
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS + NUMPIXELS_COUNTER, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
@@ -170,11 +170,11 @@ void receivePackage() {
     if (len == 1) {
       decodeBooleanPackage();
     }
-    else if (incomingPacket == "gameover") {
+    else if ((strcmp(incomingPacket, "3") == 0)) { //game over flag = 3
       resetWinningCounter();
       looserLights();
     }
-    else if (incomingPacket == "reset") {
+    else if ((strcmp(incomingPacket, "4") == 0)) { //reset flag = 4
       resetWinningCounter();
     }
     else {
@@ -253,7 +253,7 @@ void sendOtherPlateItLost() {
 
 void sendOtherPlateGameOver() {
   Udp.beginPacket(usedIP, localUdpPort);
-  Udp.write("gameover");
+  Udp.write("3");
   Udp.endPacket();
 }
 
@@ -303,7 +303,7 @@ int resetTime = 30000; //30 seconds
 void sendOtherPlateReset() {
   if ((unsigned long)(millis() - lastTimeStepped) > resetTime) {
     Udp.beginPacket(usedIP, localUdpPort);
-    Udp.write("reset");
+    Udp.write("4");
     Udp.endPacket();
   }
   resetWinningCounter();
