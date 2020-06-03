@@ -97,6 +97,38 @@ void loop() {
   receivePackage();
 }
 
+void receivePackage() {
+  int packetSize = Udp.parsePacket();
+  if (packetSize) {
+    // receive incoming UDP packets
+    Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+    int len = Udp.read(incomingPacket, 255);
+    if (len > 0) {
+      incomingPacket[len] = 0;
+    }
+    //------ Read content of package
+    Serial.printf("received %s\n", incomingPacket);
+    if ((strcmp(incomingPacket, "0") == 0)) {
+      decodeBooleanPackage();
+    }
+    else if((strcmp(incomingPacket, "1") == 0)){
+      decodeBooleanPackage();
+      }
+    else if ((strcmp(incomingPacket, "3") == 0)) { //game over flag = 3
+      Serial.printf("game over");
+      resetWinningCounter();
+      looserLights();
+    }
+    else if ((strcmp(incomingPacket, "4") == 0)) { //reset flag = 4
+      Serial.printf("reset");
+      resetWinningCounter();
+    }
+    else {
+      decodeColorAndTimestampPackage();
+    }
+  }
+}
+
 /**
    Add a win to the counter
 
@@ -118,7 +150,8 @@ void handleWinningCounter() {
     sendOtherPlateGameOver();
     resetWinningCounter();
   }
-  Serial.println("handleWinningCounter - currently: " + winningCounter);
+  Serial.print("counter: " + winningCounter);
+  Serial.println(winningCounter);
 }
 
 void resetWinningCounter() {
@@ -140,33 +173,6 @@ void plateGotActivated() {
     Serial.println(lastTimeStepped);
 
     sendTimestampAndColorToOtherPlate(lastTimeStepped);
-  }
-}
-
-void receivePackage() {
-  int packetSize = Udp.parsePacket();
-  if (packetSize) {
-    // receive incoming UDP packets
-    Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
-    int len = Udp.read(incomingPacket, 255);
-    if (len > 0) {
-      incomingPacket[len] = 0;
-    }
-    //------ Read content of package
-    Serial.printf("received %s\n", incomingPacket);
-    if (len == 1) {
-      decodeBooleanPackage();
-    }
-    else if ((strcmp(incomingPacket, "3") == 0)) { //game over flag = 3
-      resetWinningCounter();
-      looserLights();
-    }
-    else if ((strcmp(incomingPacket, "4") == 0)) { //reset flag = 4
-      resetWinningCounter();
-    }
-    else {
-      decodeColorAndTimestampPackage();
-    }
   }
 }
 
