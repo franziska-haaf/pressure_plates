@@ -15,7 +15,7 @@
 
 #define   BUTTON_PIN          4
 #define   LED_STRIP           5
-#define   NUMPIXELS           48
+#define   NUMPIXELS           47 // 48 for plate 01, 47 for plate 02
 #define   NUMPIXELS_COUNTER   5
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS + NUMPIXELS_COUNTER, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
@@ -67,6 +67,8 @@ void setup() {
 
   Udp.begin(localUdpPort);
   Serial.printf("Now listening at IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), localUdpPort);
+  Serial.print("chipId: ");
+  Serial.println(ESP.getChipId()); 
 
   // Initialize Time
   configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
@@ -78,7 +80,7 @@ int debounceDelay = 20;
 
 void loop() {
   rotateColors();
-  lighCounterLEDs();
+  updateCounterLEDs();
 
   // read the state of the button into a local variable:
   int buttonReading = digitalRead(BUTTON_PIN);
@@ -125,22 +127,27 @@ void loop() {
 int winningCounter = 0;
 int winningCounterMax = 5;
 void handleWinningCounter() {
+  updateCounterLEDs();
   if (winningCounter == winningCounterMax) {
-    lighCounterLEDs();
+    
     winnerLights();
     sendOtherPlateGameOver();
     resetWinningCounter();
   }
-  Serial.println("handleWinningCounter - currently: " + winningCounter);
+  Serial.println(winningCounter);
 }
 
 void resetWinningCounter() {
   winningCounter = 0;
+  setCounterLEDsOff();
+}
+
+void setCounterLEDsOff(){
   strip.fill(black, NUMPIXELS-1, NUMPIXELS_COUNTER);
   strip.show();
 }
 
-void lighCounterLEDs() {
+void updateCounterLEDs() {
   if (winningCounter > 0) {
     strip.fill(white, NUMPIXELS-1, winningCounter);
     strip.show();
@@ -170,11 +177,11 @@ void receivePackage() {
     if (len == 1) {
       decodeBooleanPackage();
     }
-    else if (incomingPacket == "gameover") {
+    else if ((strcmp(incomingPacket, "3") == 0)) { //game over flag = 3
       resetWinningCounter();
       looserLights();
     }
-    else if (incomingPacket == "reset") {
+    else if ((strcmp(incomingPacket, "4") == 0)) { //reset flag = 4
       resetWinningCounter();
     }
     else {
@@ -185,12 +192,14 @@ void receivePackage() {
 
 void decodeBooleanPackage() {
   if ((strcmp(incomingPacket, "1") == 0)) {
-    +
     winningCounter++;
     handleWinningCounter();
   }
   else if ((strcmp(incomingPacket, "0") == 0)) {
-    winningCounter--;
+    Serial.println("meh");
+    if(winningCounter != 0 ){
+      winningCounter--;
+     }
     handleWinningCounter();
   }
 }
@@ -253,7 +262,7 @@ void sendOtherPlateItLost() {
 
 void sendOtherPlateGameOver() {
   Udp.beginPacket(usedIP, localUdpPort);
-  Udp.write("gameover");
+  Udp.write("3");
   Udp.endPacket();
 }
 
@@ -303,7 +312,7 @@ int resetTime = 30000; //30 seconds
 void sendOtherPlateReset() {
   if ((unsigned long)(millis() - lastTimeStepped) > resetTime) {
     Udp.beginPacket(usedIP, localUdpPort);
-    Udp.write("reset");
+    Udp.write("4");
     Udp.endPacket();
   }
   resetWinningCounter();
@@ -313,7 +322,7 @@ void setToRandomColor() {
   int randNumber = random(0, amountOfColors);
   strip.fill( colors[randNumber], 0, NUMPIXELS - 1);
   currentColor = randNumber;
-  Serial.printf("set current color %d\n", currentColor);
+  //Serial.printf("set current color %d\n", currentColor);
   strip.show();
 }
 
