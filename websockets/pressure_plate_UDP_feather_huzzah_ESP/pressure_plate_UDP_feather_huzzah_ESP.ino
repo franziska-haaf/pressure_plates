@@ -226,7 +226,7 @@ void decodeColorAndTimestampPackage() {
 bool checkIfMyTimestampIsEarlier(time_t receivedTimestamp) {
   Serial.printf("comparing timestamps %ld and %ld\n", lastTimeStepped, receivedTimestamp);
   double diffedTime = difftime(lastTimeStepped, receivedTimestamp);
-  Serial.println("Diffed time is ");
+  Serial.print("time diff:");
   Serial.println(diffedTime);
   return diffedTime > 0;
 }
