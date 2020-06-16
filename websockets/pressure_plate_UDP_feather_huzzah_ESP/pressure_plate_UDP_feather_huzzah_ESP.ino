@@ -310,10 +310,17 @@ void sendOtherPlateReset() {
 }
 
 void setToRandomColor() {
-  int randNumber = random(0, amountOfColors);
+  int randNumber = currentColor;
+  while(randNumber == currentColor){
+    randNumber = getRandomColorNumber();
+  }
   strip.fill( colors[randNumber], 0, NUMPIXELS - 1);
   currentColor = randNumber;
   strip.show();
+}
+
+int getRandomColorNumber(){
+  return random(0, amountOfColors);
 }
 
 void winnerLights() {
