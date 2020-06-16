@@ -15,7 +15,7 @@
 
 #define   BUTTON_PIN          4
 #define   LED_STRIP           5
-#define   NUMPIXELS           47 // 48 for plate 01, 47 for plate 02
+#define   NUMPIXELS           48 
 #define   NUMPIXELS_COUNTER   5
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS + NUMPIXELS_COUNTER, LED_STRIP, NEO_GRB + NEO_KHZ800);
 
@@ -290,7 +290,7 @@ void sendTimestampAndColorToOtherPlate(time_t timestamp) {
      Rotate all the colors every x seconds.
      Using millis(), this won' stop the program
 */
-int waitTime = 5000; //5 seconds
+int waitTime = 2000; //5 seconds
 unsigned long timeNow = 0;
 void rotateColors() {
   if ((unsigned long)(millis() - timeNow) > waitTime) {
